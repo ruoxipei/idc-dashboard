@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2026 年 4 月 智能手机行业月报</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: inherit; }
+
+:root {
+  --ink:    #1a1a1a;     /* 主文字 */
+  --gray-1: #fafafa;     /* 浅底 */
+  --gray-2: #f0f0f0;     /* 边线 */
+  --gray-3: #d4d4d4;     /* 中灰 */
+  --gray-4: #737373;     /* 次要文字 */
+  --accent: #0066cc;     /* 唯一强调色：蓝 */
+  --pos:    #047857;     /* 涨深绿 */
+  --neg:    #b91c1c;     /* 跌深红 */
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif;
+  background: #e8e8e8; color: var(--ink); font-size: 15px; line-height: 1.7;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  display: flex; justify-content: center; padding: 0;
+}
+
+.container {
+  width: 440px; max-width: 100%; margin: 0 auto;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+/* ====== Hero ====== */
+.hero {
+  background: var(--ink);
+  color: #fff;
+  padding: 36px 24px 28px;
+  border-bottom: 4px solid var(--accent);
+}
+.hero .tag-line {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--accent);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+.hero h1 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+.hero .sub {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  font-weight: 400;
+}
+.hero .date-badge {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+/* ====== Alert Banner ====== */
+.alert-banner {
+  background: var(--gray-1);
+  border-bottom: 1px solid var(--gray-2);
+  border-left: 3px solid var(--accent);
+  padding: 14px 20px;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.65;
+  font-weight: 400;
+}
+.alert-banner b { color: var(--accent); font-weight: 700; }
+
+/* ====== KPI Strip ====== */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--gray-2);
+}
+.kpi-item {
+  padding: 18px 12px;
+  text-align: center;
+  border-right: 1px solid var(--gray-2);
+}
+.kpi-item:last-child { border-right: none; }
+.kpi-item .k-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-4);
+  margin-bottom: 6px;
+}
+.kpi-item .k-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.kpi-item .k-delta {
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+  color: var(--gray-4);
+}
+.kpi-item.featured .k-value { color: var(--accent); }
+
+/* ====== Section ====== */
+.sec {
+  padding: 22px 24px 14px;
+}
+.sec-head {
+  display: flex; align-items: stretch; gap: 0;
+  margin-bottom: 18px;
+  background: var(--ink);
+  margin-left: -24px; margin-right: -24px;
+  padding: 14px 24px;
+  color: #fff;
+}
+.sec-num {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-right: 14px;
+  letter-spacing: 0;
+  display: flex; align-items: center;
+}
+.sec-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  display: flex; align-items: center;
+}
+
+/* ====== Sub-section ====== */
+.sub-sec {
+  margin: 20px 0 8px;
+}
+.sub-sec h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+  padding-left: 10px;
+  border-left: 2px solid var(--accent);
+}
+
+/* ====== Chart Card ====== */
+.chart-card {
+  background: #fff;
+  border: 1px solid var(--gray-2);
+  padding: 10px 6px 6px;
+  margin: 8px 0 12px;
+}
+.chart-card .cc-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-4);
+  letter-spacing: 0.3px;
+  padding: 2px 10px 8px;
+  text-align: center;
+}
+.chart { width: 100%; min-height: 220px; }
+
+/* ====== Insight Box ====== */
+.insight-box {
+  background: var(--gray-1);
+  border-left: 2px solid var(--accent);
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.insight-box.warn {
+  background: var(--gray-1);
+  border-left-color: var(--ink);
+}
+.insight-box .i-title { display: none; }
+.insight-box p { margin: 4px 0; }
+.insight-box b { color: var(--accent); font-weight: 700; }
+
+/* ====== Table ====== */
+.tbl-wrap { margin: 10px 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th {
+  background: transparent;
+  color: var(--gray-4);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 10px 6px;
+  text-align: center;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  letter-spacing: 0.3px;
+}
+th:first-child { text-align: left; padding-left: 4px; }
+td {
+  padding: 9px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--gray-2);
+  color: var(--ink);
+}
+td:first-child { text-align: left; padding-left: 4px; font-weight: 700; }
+tr:last-child td { border-bottom: 1px solid var(--ink); }
+tr.total-row td {
+  font-weight: 700;
+  border-top: 1px solid var(--gray-3);
+  border-bottom: 1px solid var(--ink);
+}
+tr.row-neg td:first-child { color: var(--neg); }
+tr.row-pos td:first-child { color: var(--pos); }
+
+.pos { color: var(--pos); font-weight: 600; }
+.neg { color: var(--neg); font-weight: 600; }
+
+/* ====== Rank Cards：卡片式 ====== */
+.rank-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 10px 0 16px;
+}
+.rank-header {
+  display: grid;
+  grid-template-columns: 32px 80px 1fr 1fr;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-4);
+  letter-spacing: 0.3px;
+}
+.rank-card {
+  display: grid;
+  grid-template-columns: 32px 80px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 11px 12px;
+  background: #fff;
+  border: 1px solid var(--gray-2);
+  border-radius: 6px;
+  font-size: 14px;
+}
+.rank-card.hot-pos {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.rank-card.hot-neg {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+.rank-card .rc-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-4);
+}
+.rank-card.hot-pos .rc-num { color: var(--pos); }
+.rank-card.hot-neg .rc-num { color: var(--neg); }
+.rank-card .rc-brand {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+.rank-card .rc-data {
+  text-align: center;
+  font-size: 13px;
+}
+.rc-data .rd-val { font-weight: 700; color: var(--ink); }
+.rc-data .rd-yoy { font-size: 12px; font-weight: 700; margin-left: 4px; }
+
+/* ====== Vendor Cards：极简横线分隔 ====== */
+.vendor-grid {
+  margin: 10px 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.v-card {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--gray-2);
+  font-size: 14px;
+  line-height: 1.6;
+  border-left: 3px solid transparent;
+}
+.v-card:last-child { border-bottom: none; }
+.v-card.vc-pos { border-left-color: var(--pos); }
+.v-card.vc-neg { border-left-color: var(--neg); }
+.v-card .vc-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+.v-card.vc-pos .vc-name,
+.v-card.vc-neg .vc-name { color: var(--ink); }
+.v-card .vc-text {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* ====== Summary Quote ====== */
+.summary-quote {
+  background: transparent;
+  border-left: 2px solid var(--accent);
+  padding: 6px 14px;
+  margin: 8px 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+/* ====== Divider ====== */
+.divider {
+  height: 1px;
+  background: var(--gray-2);
+  margin: 0;
+}
+
+/* ====== Footer ====== */
+.foot {
+  padding: 24px 18px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--gray-4);
+  border-top: 1px solid var(--gray-2);
+  letter-spacing: 0.5px;
+}
+
+@media print {
+  body { background: #fff; }
+  .container { box-shadow: none; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ===== Hero ===== -->
+<div class="hero">
+  <div class="tag-line">Monthly Report · Apr 2026</div>
+  <h1>手机厂商4月月报</h1>
+  <div class="date-badge">2026.04</div>
+</div>
+
+<!-- ===== Alert ===== -->
+<div class="alert-banner">
+  全球智能手机连续 10 季度的增长在 26Q1 终结，<b>Counterpoint -6%</b>。主因 DRAM/NAND 被 AI 数据中心抢占供应，合约价 +25%/+22%，OEM 利润普遍承压，采用砍中低端线+提价策略应对。
+</div>
+
+<!-- ===== KPI Strip ===== -->
+<div class="kpi-strip">
+  <div class="kpi-item featured">
+    <div class="k-label">全球总出货</div>
+    <div class="k-value">289.7<span style="font-size:12px;font-weight:600;">M</span></div>
+    <div class="k-delta neg">-6.0% YoY</div>
+  </div>
+  <div class="kpi-item">
+    <div class="k-label">海外出货</div>
+    <div class="k-value">220.7<span style="font-size:12px;font-weight:600;">M</span></div>
+    <div class="k-delta" style="color:#64748b;">占比 76.2%</div>
+  </div>
+  <div class="kpi-item">
+    <div class="k-label">中国出货</div>
+    <div class="k-value">69.0<span style="font-size:12px;font-weight:600;">M</span></div>
+    <div class="k-delta neg">-3.2% YoY</div>
+  </div>
+</div>
+
+<!-- ===== Section 1 ===== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">1</div>
+    <div class="sec-title">市场：全球及中国出货量趋势</div>
+  </div>
+
+  <div class="sub-sec">
+    <h3>1.1 全球：10 季度增长终结，26Q1 拐点确认</h3>
+  </div>
+
+  <div class="chart-card">
+    <div class="cc-title">全球季度出货走势 · 25Q1—26Q1（百万台）</div>
+    <div id="chart_global" class="chart" style="height:260px;"></div>
+  </div>
+
+  <div class="insight-box">
+    <p><b>26Q1 全球出货 -6%，过去 10 季度首次负增长。</b>三大原因：</p>
+    <p>① <b>存储芯片荒</b> — AI 数据中心抢占 DRAM/NAND，合约价 +25%/+22%，BOM→终端提价</p>
+    <p>② <b>5G 换机潮结束</b> — 换机周期 36→42 个月</p>
+    <p>③ <b>新兴市场承压</b> — 印度/东南亚/拉美中低端需求疲软</p>
+  </div>
+
+  <div class="sub-sec">
+    <h3>1.2 中国：Q1 同比 -3.2%，主因小米 -36%</h3>
+  </div>
+
+  <div class="chart-card">
+    <div class="cc-title">中国季度出货 · 厂商堆叠（万台）+ YoY%</div>
+    <div id="chart_cn_vendors" class="chart" style="height:440px;"></div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>厂商</th><th>2026 YTD(万台)</th><th>去年同期</th><th>YoY</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>华为</td><td><b>1530.7</b></td><td>1502.4</td><td class="pos">+1.9%</td></tr>
+        <tr class="row-neg"><td>小米</td><td><b>856.7</b></td><td>1334.1</td><td class="neg">-35.8%</td></tr>
+        <tr><td>OPPO</td><td><b>1103.2</b></td><td>1198.6</td><td class="neg">-8.0%</td></tr>
+        <tr><td>vivo</td><td><b>1045.7</b></td><td>1034.4</td><td class="pos">+1.1%</td></tr>
+        <tr><td>荣耀</td><td><b>885.6</b></td><td>904.0</td><td class="neg">-2.0%</td></tr>
+        <tr class="row-pos"><td>Apple</td><td><b>1307.7</b></td><td>981.3</td><td class="pos">+33.3%</td></tr>
+        <tr><td>其他品牌</td><td>177.5</td><td>181.6</td><td class="neg">-2.3%</td></tr>
+        <tr class="total-row"><td>全市场总计</td><td><b>6907.0</b></td><td>7136.4</td><td class="neg">-3.2%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight-box">
+    <p><b>小米独家拖累</b>：YTD 856.7 万台、同比 -35.8%。Redmi 中低端占比 65%+，存储涨价冲击最直接，Q1 主力机 Redmi Turbo 5 / Note 15 系列 / K80 老机型同比分别下滑 40~60%（Redmi K90 已在 25-10 集中出货）。</p>
+  </div>
+
+  <div class="sub-sec">
+    <h3>1.3 海外 TOP 厂商 ——「小米跳水 vs 荣耀飙升」</h3>
+  </div>
+
+  <div class="rank-grid">
+    <div class="rank-header">
+      <div>#</div><div>厂商</div><div style="text-align:center;">全球 26Q1</div><div style="text-align:center;">海外 26Q1</div>
+    </div>
+    <div class="rank-card">
+      <div class="rc-num">#1</div>
+      <div class="rc-brand">Apple</div>
+      <div class="rc-data"><span class="rd-val">60.8M</span> <span class="rd-yoy pos">+5.0%</span></div>
+      <div class="rc-data"><span class="rd-val">47.7M</span> <span class="rd-yoy neg">-0.8%</span></div>
+    </div>
+    <div class="rank-card">
+      <div class="rc-num">#2</div>
+      <div class="rc-brand">Samsung</div>
+      <div class="rc-data"><span class="rd-val">57.9M</span> <span class="rd-yoy neg">-4.5%</span></div>
+      <div class="rc-data"><span class="rd-val">57.5M</span> <span class="rd-yoy neg">-4.3%</span></div>
+    </div>
+    <div class="rank-card hot-neg">
+      <div class="rc-num">#3</div>
+      <div class="rc-brand">Xiaomi</div>
+      <div class="rc-data"><span class="rd-val">37.3M</span> <span class="rd-yoy neg">-18.9%</span></div>
+      <div class="rc-data"><span class="rd-val">27.6M</span> <span class="rd-yoy neg">-15.6%</span></div>
+    </div>
+    <div class="rank-card">
+      <div class="rc-num">#4</div>
+      <div class="rc-brand">vivo</div>
+      <div class="rc-data"><span class="rd-val">22.3M</span> <span class="rd-yoy neg">-10.8%</span></div>
+      <div class="rc-data"><span class="rd-val">11.9M</span> <span class="rd-yoy neg">-10.5%</span></div>
+    </div>
+    <div class="rank-card">
+      <div class="rc-num">#5</div>
+      <div class="rc-brand">OPPO</div>
+      <div class="rc-data"><span class="rd-val">22.0M</span> <span class="rd-yoy neg">-17.0%</span></div>
+      <div class="rc-data"><span class="rd-val">12.1M</span> <span class="rd-yoy neg">-19.3%</span></div>
+    </div>
+    <div class="rank-card hot-pos">
+      <div class="rc-num">#6</div>
+      <div class="rc-brand">Honor</div>
+      <div class="rc-data"><span class="rd-val">20.3M</span> <span class="rd-yoy pos">+25.3%</span></div>
+      <div class="rc-data"><span class="rd-val">12.1M</span> <span class="rd-yoy pos">+68.1%</span></div>
+    </div>
+    <div class="rank-card">
+      <div class="rc-num">#7</div>
+      <div class="rc-brand">Transsion</div>
+      <div class="rc-data"><span class="rd-val">19.5M</span> <span class="rd-yoy neg">-22.0%</span></div>
+      <div class="rc-data"><span class="rd-val">19.4M</span> <span class="rd-yoy neg">-22.1%</span></div>
+    </div>
+    <div class="rank-card">
+      <div class="rc-num">#8</div>
+      <div class="rc-brand">Huawei</div>
+      <div class="rc-data"><span class="rd-val">16.0M</span> <span class="rd-yoy pos">+28.0%</span></div>
+      <div class="rc-data"><span class="rd-val">0M</span> <span class="rd-yoy" style="color:#94a3b8;">—</span></div>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <p><b>小米 -18.9%（海外 -15.6%）</b>：中低端对存储成本最敏感，欧洲补贴消退，印度被 Realme/vivo 反扑，国内被华为重夺份额，四大市场同步承压。</p>
+    <p><b>荣耀 +25.3%（海外 +68.1%）</b>：海外占比首次过半，欧洲 Magic 高端突破（份额 4%→7%），MEA 性价比+渠道下沉冲到 9%，MWC ROBOT PHONE 强化差异化。</p>
+  </div>
+
+  <div class="chart-card">
+    <div class="cc-title">各厂商在 7 大区的份额分布（热力图）</div>
+    <div id="chart_heatmap" class="chart" style="height:440px;"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== Section 2 ===== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">2</div>
+    <div class="sec-title">厂商 4 月动态总结</div>
+  </div>
+
+  <div class="summary-quote">
+    Q1 全球见顶回落，国产 HMOVR 高端突围与海外破局成主线，Apple/三星稳守，小米深度调整、传音承压。
+  </div>
+
+  <div class="vendor-grid">
+    <div class="v-card vc-pos">
+      <div class="vc-name">Huawei</div>
+      <div class="vc-text">中国 22.2% 重夺第一；4/20 全场景发布会，鸿蒙 6.1 + 三芯齐发；海外重启仍待破局</div>
+    </div>
+    <div class="v-card vc-neg">
+      <div class="vc-name">Xiaomi</div>
+      <div class="vc-text">全球 -19%，2025 营收 4573 亿（+25%）+ 汽车首破千亿反哺手机研发</div>
+    </div>
+    <div class="v-card">
+      <div class="vc-name">OPPO</div>
+      <div class="vc-text">下滑较大 -17%；高端 4/21 Find X9 Ultra；海外靠东南亚+印度 Realme 守基本盘，欧洲走中端品牌</div>
+    </div>
+    <div class="v-card">
+      <div class="vc-name">vivo</div>
+      <div class="vc-text">国内中端走弱 -10.8%；新增巴西+北非区域中心，押注东南亚+巴西本地化产线</div>
+    </div>
+    <div class="v-card vc-pos">
+      <div class="vc-name">Honor</div>
+      <div class="vc-text">全球 +25% / 海外 +68% 双冠王；4/23 Magic 8 至臻版，MWC ROBOT PHONE + A 股 IPO 闯关</div>
+    </div>
+    <div class="v-card vc-pos">
+      <div class="vc-name">Apple</div>
+      <div class="vc-text">14 年首夺 Q1 全球第一，中国 +42%；秋季 iPhone 18 被预告「十年最大升级」（4/30 财报待披露）</div>
+    </div>
+    <div class="v-card">
+      <div class="vc-name">Samsung</div>
+      <div class="vc-text">手机 -4.5% 失第一，但集团 Q1 利润 +700%（$38B）；HBM 业务暴涨，折叠屏 + AI 双线突围</div>
+    </div>
+    <div class="v-card vc-neg">
+      <div class="vc-name">Transsion</div>
+      <div class="vc-text">全球 -22%，南亚（印度/巴基斯坦）被国产 OV/realme 反扑挤压最重；非洲 30% 基本盘稳，三品牌差异化运营，试探 200~400 美元中端段</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== Section 3: 外发业务 ===== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">3</div>
+    <div class="sec-title">外发26年累计核心数据</div>
+  </div>
+
+  <div class="insight-box" style="margin:0 0 14px;">
+    <p><b>外发新增</b>：26年预计累计新增1.6亿，受新游洛克及王者世界影响，内发及PC+iOS大涨，致外发YoY低于大盘</p>
+    <p><b>流水</b>：延续增长态势，累计占比提升至43%，涨幅优于大盘</p>
+  </div>
+
+  <!-- 大盘 + 外发 KPI：2×2 卡片 -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 18px;">
+    <div style="background:#fff; border:1px solid var(--gray-2); border-radius:8px; padding:14px 16px;">
+      <div class="k-label" style="text-align:center; font-weight:700; color:var(--ink);">大盘新增</div>
+      <div style="font-size:15px; font-weight:700; margin-top:8px; text-align:center;">YoY <span class="pos">+38%</span></div>
+      <div style="font-size:15px; font-weight:700; text-align:center;">MoM <span class="neg">-6%</span></div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--accent); border-radius:8px; padding:14px 16px;">
+      <div class="k-label" style="text-align:center; font-weight:700; color:var(--accent);">外发新增</div>
+      <div style="font-size:15px; font-weight:700; margin-top:8px; text-align:center;">YoY <span class="pos">+21%</span></div>
+      <div style="font-size:15px; font-weight:700; text-align:center;">MoM <span class="neg">-13%</span></div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--gray-2); border-radius:8px; padding:14px 16px;">
+      <div class="k-label" style="text-align:center; font-weight:700; color:var(--ink);">大盘流水</div>
+      <div style="font-size:15px; font-weight:700; margin-top:8px; text-align:center;">YoY <span class="pos">+16%</span></div>
+      <div style="font-size:15px; font-weight:700; text-align:center;">MoM <span class="pos">+8%</span></div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--accent); border-radius:8px; padding:14px 16px;">
+      <div class="k-label" style="text-align:center; font-weight:700; color:var(--accent);">外发流水</div>
+      <div style="font-size:15px; font-weight:700; margin-top:8px; text-align:center;">YoY <span class="pos">+22%</span></div>
+      <div style="font-size:15px; font-weight:700; text-align:center;">MoM <span class="pos">+6%</span></div>
+    </div>
+  </div>
+
+  <!-- 渠道明细表 -->
+  <div class="tbl-wrap">
+    <table>
+      <colgroup>
+        <col><col><col><col><col style="border-left:1px solid var(--gray-2);"><col><col>
+      </colgroup>
+      <thead>
+        <tr>
+          <th style="border:none;"></th>
+          <th colspan="3" style="border-top:none; border-bottom:1px solid var(--gray-3); color:var(--ink); font-size:12px; font-weight:700; padding-bottom:4px;">新增（百万）</th>
+          <th colspan="3" style="border-top:none; border-bottom:1px solid var(--gray-3); color:var(--ink); font-size:12px; font-weight:700; padding-bottom:4px;">流水（亿元）</th>
+        </tr>
+        <tr>
+          <th></th>
+          <th>2026</th><th>YoY</th><th>MoM</th>
+          <th>2026</th><th>YoY</th><th>MoM</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="total-row">
+          <td>大盘</td>
+          <td><b>271</b></td><td class="pos">+38%</td><td class="neg">-6%</td>
+          <td><b>870</b></td><td class="pos">+16%</td><td class="pos">+8%</td>
+        </tr>
+        <tr style="background:#eff6ff; font-weight:700;">
+          <td style="color:#1e3a8a;">安卓外发</td>
+          <td><b>160</b></td><td class="pos">+21%</td><td class="neg">-13%</td>
+          <td><b>375</b></td><td class="pos">+22%</td><td class="pos">+6%</td>
+        </tr>
+        <tr>
+          <td>安卓内发</td>
+          <td>40</td><td class="pos">+93%</td><td class="pos">+38%</td>
+          <td>184</td><td class="neg">-10%</td><td class="pos">+6%</td>
+        </tr>
+        <tr>
+          <td>PC+iOS+其他</td>
+          <td>71</td><td class="pos">+62%</td><td class="neg">-14%</td>
+          <td>312</td><td class="pos">+29%</td><td class="pos">+13%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sub-sec" style="margin-top:18px;">
+    <h3>3.1 主要分发渠道流水表现（idata 口径）</h3>
+  </div>
+
+  <div class="insight-box" style="margin:0 0 10px; font-weight:700; color:#1e40af;">
+    <p>新游洛克及三角洲表现亮眼，带动主要外渠累计涨幅超 IEG 大盘；OPPO 4月同比下跌主因王者等老游下滑。</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th></th>
+        <th>累计流水(亿)</th>
+        <th>累计YoY</th>
+        <th>4月YoY</th>
+        <th>4月MoM</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>OPPO</td><td><b>78</b></td><td class="pos">+18%</td><td class="neg">-2%</td><td class="pos">+5%</td></tr>
+        <tr><td>vivo</td><td><b>102</b></td><td class="pos">+22%</td><td class="pos">+3%</td><td class="pos">+3%</td></tr>
+        <tr><td>华为</td><td><b>84</b></td><td class="pos">+18%</td><td style="color:#64748b;">0%</td><td class="pos">+7%</td></tr>
+        <tr><td>小米</td><td><b>52</b></td><td class="pos">+27%</td><td class="pos">+7%</td><td class="pos">+7%</td></tr>
+        <tr style="background:#f0fdf4;"><td>荣耀</td><td><b>22</b></td><td class="pos">+77%</td><td class="pos">+46%</td><td style="color:#64748b;">0%</td></tr>
+        <tr style="background:#f0fdf4;"><td>Taptap</td><td><b>9</b></td><td class="pos">+42%</td><td class="pos">+44%</td><td class="pos">+26%</td></tr>
+        <tr><td>43好游</td><td><b>8</b></td><td class="pos">+15%</td><td class="pos">+11%</td><td class="pos">+10%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sub-sec" style="margin-top:18px;">
+    <h3>3.2 主要分发渠道流水表现（微享口径）</h3>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th></th>
+        <th>26年1-4月(亿)</th>
+        <th>YoY</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>小米</td><td><b>17</b></td><td class="pos">+64%</td></tr>
+        <tr><td>OPPO</td><td><b>26</b></td><td class="neg">-14%</td></tr>
+        <tr><td>vivo</td><td><b>34</b></td><td class="pos">+39%</td></tr>
+        <tr><td>华为 · 双框</td><td><b>59</b></td><td class="neg">-1%</td></tr>
+        <tr><td>华为 · 单框</td><td><b>16</b></td><td class="pos">+2043%</td></tr>
+        <tr><td>荣耀</td><td><b>13</b></td><td class="pos">+74%</td></tr>
+        <tr><td>43好游</td><td><b>3</b></td><td class="pos">+60%</td></tr>
+        <tr><td>TapTap</td><td><b>5</b></td><td class="pos">+89%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== Section 4: 反拦截进展同步 ===== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">4</div>
+    <div class="sec-title">外发专项 — 反拦截进展同步</div>
+  </div>
+
+  <div class="insight-box">
+    <p><b>1.</b> 小米第二轮规模监测已近结束，小米拦截稳定 <b>0%</b>，OMVR 总拦截率为 <b>6.5%</b></p>
+    <p><b>2.</b> 内渠侧，官网拦截仍明显偏高，主因荣耀自研浏览器未完全覆盖，叠加官网入口买量场景较多导致</p>
+    <p><b>3.</b> vivo debug 优化后拦截已明显降低，建议节后开启规模监测进行新链路稳定性校验</p>
+  </div>
+
+  <!-- 4 张概览 KPI 卡片 -->
+  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin:14px 0;">
+    <div style="background:#fff; border:1px solid var(--gray-2); border-radius:6px; padding:10px 12px; text-align:center;">
+      <div class="k-label" style="font-weight:700; color:var(--ink); font-size:11px;">小米拦截率</div>
+      <div style="font-size:20px; font-weight:800; color:var(--pos); margin:4px 0;">0%</div>
+      <div style="font-size:10px; color:var(--gray-4); font-weight:600;">较第一轮 0% — <span class="pos">0pp</span></div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--gray-2); border-radius:6px; padding:10px 12px; text-align:center;">
+      <div class="k-label" style="font-weight:700; color:var(--ink); font-size:11px;">OVMR 总拦截率</div>
+      <div style="font-size:20px; font-weight:800; color:var(--neg); margin:4px 0;">6.5%</div>
+      <div style="font-size:10px; color:var(--gray-4); font-weight:600;">较第一轮 18.8% <span class="pos">↓ 12.3pp</span></div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--gray-2); border-radius:6px; padding:10px 12px; text-align:center;">
+      <div class="k-label" style="font-weight:700; color:var(--ink); font-size:11px;">监测游戏数</div>
+      <div style="font-size:20px; font-weight:800; color:var(--accent); margin:4px 0;">11</div>
+      <div style="font-size:10px; color:var(--gray-4); font-weight:600;">10 款常规 + 洛克 ×3 轮</div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--gray-2); border-radius:6px; padding:10px 12px; text-align:center;">
+      <div class="k-label" style="font-weight:700; color:var(--ink); font-size:11px;">监测样本总量</div>
+      <div style="font-size:20px; font-weight:800; color:var(--ink); margin:4px 0;">29,200</div>
+      <div style="font-size:9px; color:var(--gray-4); font-weight:600; line-height:1.4;">250×8渠道×10游戏 + 400×3轮×8渠道</div>
+    </div>
+  </div>
+  <div style="font-size:11px; color:var(--gray-4); margin:0 0 14px 4px;">备注：OVMR 加权统计，不含华为</div>
+
+  <!-- 各厂商加权拦截率 -->
+  <div class="sub-sec">
+    <h3>4.1 各厂商加权拦截率</h3>
+  </div>
+  <div class="chart-card">
+    <div id="chart_block_brand" class="chart" style="height:340px;"></div>
+  </div>
+
+  <!-- 各渠道总拦截率 -->
+  <div class="sub-sec">
+    <h3>4.2 各渠道总拦截率</h3>
+  </div>
+  <div class="chart-card">
+    <div id="chart_block_channel" class="chart" style="height:320px;"></div>
+  </div>
+  <div style="font-size:11px; color:var(--gray-4); margin:-6px 0 14px 4px;">备注：官网拦截率较高主因荣耀浏览器未适配新链路</div>
+
+  <!-- 渠道 × 厂商明细表 -->
+  <div class="sub-sec">
+    <h3>4.3 渠道 × 厂商拦截率明细</h3>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>渠道</th><th>Xiaomi</th><th>OPPO</th><th>vivo</th><th>Honor</th><th>Total</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>QQ</td><td class="pos">0.0%</td><td>12.0%</td><td>7.8%</td><td>10.3%</td><td>4.4%</td></tr>
+        <tr><td>QQ浏览器</td><td class="pos">0.0%</td><td>14.7%</td><td>10.8%</td><td>10.7%</td><td>5.3%</td></tr>
+        <tr><td>官网</td><td class="pos">0.0%</td><td>19.3%</td><td>13.1%</td><td class="neg"><b>92.4%</b></td><td class="neg"><b>17.7%</b></td></tr>
+        <tr><td>腾讯视频</td><td class="pos">0.0%</td><td>11.7%</td><td>8.8%</td><td>10.3%</td><td>4.5%</td></tr>
+        <tr><td>腾讯手机管家</td><td class="pos">0.0%</td><td>12.3%</td><td>8.8%</td><td>10.3%</td><td>4.6%</td></tr>
+        <tr><td>腾讯新闻</td><td class="pos">0.0%</td><td>4.3%</td><td>8.5%</td><td>10.3%</td><td>3.4%</td></tr>
+        <tr><td>微信</td><td class="pos">0.0%</td><td>11.7%</td><td>11.1%</td><td>10.3%</td><td>4.8%</td></tr>
+        <tr><td>应用宝</td><td class="pos">0.0%</td><td>6.0%</td><td>9.5%</td><td>10.3%</td><td>3.8%</td></tr>
+        <tr class="total-row"><td>总计</td><td class="pos">0.0%</td><td>11.5%</td><td>9.8%</td><td><b>20.6%</b></td><td><b>6.5%</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="foot">
+  © 2026-04 智能手机行业月报 ｜ 内部使用
+</div>
+
+</div>
+
+<script>
+// Plotly 全局字体（与 body 保持一致）
+const PLOTLY_FONT = {
+  family: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif',
+  color: '#1a1a1a'
+};
+Plotly.setPlotConfig({ responsive: true });
+const BRAND_COLORS = {
+  'Apple': '#a8a8a8', 'Samsung': '#1428a0', 'Xiaomi': '#ff8c00',
+  'Honor': '#7dc8f7', 'vivo': '#1f8efa', 'OPPO': '#5cb85c',
+  'Huawei': '#c8102e', 'Transsion': '#7c3aed', '荣耀':'#7dc8f7','其他':'#cbd5e1'
+};
+
+// ===== 全球走势 =====
+const qs = ["25Q1","25Q2","25Q3","25Q4","26Q1"];
+const totalArr = [308.0, 295.2, 322.7, 336.3, 289.7];
+const yoyArr = [3.7, 3.4, 5.1, 1.1, -6.0];
+
+Plotly.newPlot('chart_global', [
+  { x: qs, y: totalArr, name: '全球总量', type: 'bar',
+    marker: {color: qs.map((q,i) => i === qs.length-1 ? '#b91c1c' : '#0066cc')},
+    text: totalArr.map((v,i) => `<b>${v.toFixed(0)}</b><br><span style="color:${yoyArr[i]>=0?'#047857':'#b91c1c'};font-weight:700">${yoyArr[i]>=0?'+':''}${yoyArr[i].toFixed(1)}%</span>`),
+    textposition:'outside', cliponaxis:false,
+    textfont:{size:10, color:'#1a1a1a'} },
+  { x: qs, y: yoyArr, name: 'YoY %', type: 'scatter', mode: 'lines+markers',
+    line:{color:'#1a1a1a', width:1.5, shape:'spline'}, marker:{size:5, color:'#1a1a1a'},
+    yaxis:'y2', cliponaxis:false, hoverinfo:'skip' }
+], {
+  yaxis:{automargin:true, range:[0, 410], showticklabels:false, showgrid:false, zeroline:false},
+  yaxis2:{overlaying:'y', side:'right', ticksuffix:'%', range:[-10, 10],
+    showgrid:false, zeroline:true, zerolinecolor:'#d4d4d4', showticklabels:false},
+  xaxis:{type:'category', tickfont:{size:11, color:'#1a1a1a'}, showgrid:false},
+  legend:{orientation:'h', y:-0.18, font:{size:10}},
+  margin:{t:30, b:40, l:6, r:6}, bargap:0.5,
+  font: PLOTLY_FONT, paper_bgcolor:'transparent', plot_bgcolor:'transparent'
+}, {responsive:true, displayModeBar:false});
+
+// ===== 中国堆叠图 =====
+const cnQs    = ['25Q1', '25Q2', '25Q3', '25Q4', '26Q1'];
+const cnTotal = [7136, 6900, 7140, 7350, 6907];
+const cnYoY   = [-3.0, -3.5, 4.0, 1.5, -3.2];
+const cnVendorQuarter = {
+  '华为':   [1264, 1170, 1330, 1485, 1531],
+  '小米':   [1334, 1260, 1465, 1547,  857],
+  'OPPO':   [1199, 1020, 1175, 1165, 1103],
+  'vivo':   [1034,  985, 1020, 1075, 1046],
+  '荣耀':   [ 904,  840,  900,  925,  886],
+  'Apple':  [ 981, 1110, 1065, 1015, 1308],
+  '其他':   [ 420,  515,  185,  138,  176]
+};
+const cnBrandColors = {
+  '华为':  '#003d7a',   // 最深蓝（底部）
+  '小米':  '#0055a8',
+  'OPPO':  '#0066cc',
+  'vivo':  '#3b8fd9',
+  '荣耀':  '#73b3e7',
+  'Apple': '#aac8e6',
+  '其他':  '#dde8f4'    // 最浅
+};
+const cnBrandsOrder = ['华为','小米','OPPO','vivo','荣耀','Apple'];
+
+const cnStackTraces = cnBrandsOrder.map(b => ({
+  x: cnQs, y: cnVendorQuarter[b], name: b, type: 'bar',
+  marker: { color: cnBrandColors[b] },
+  text: cnVendorQuarter[b].map((v, i) => Math.round(v / cnTotal[i] * 100) + '%'),
+  textposition: 'inside',
+  textfont: { size: 10, color: ['Apple','其他'].includes(b) ? '#1a1a1a' : '#fff', weight: 700 },
+  insidetextanchor: 'middle',
+  hovertemplate: `<b>${b}</b><br>%{x}: %{y} 万台<extra></extra>`
+}));
+
+cnStackTraces.push({
+  x: cnQs, y: cnTotal,
+  mode: 'text', type: 'scatter',
+  text: cnTotal.map(v => `<b>${v}</b>`),
+  textposition: 'top center',
+  textfont: { size: 11, color: '#1a1a1a', weight: 800 },
+  showlegend: false, hoverinfo: 'skip', cliponaxis: false
+});
+
+cnStackTraces.push({
+  x: cnQs, y: cnYoY,
+  name: 'YoY %', type: 'scatter', mode: 'lines+markers+text',
+  line: { color: '#1a1a1a', width: 1.5, shape: 'spline' },
+  marker: { size: 5, color: '#1a1a1a' },
+  text: cnYoY.map(v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%'),
+  textposition: 'top center',
+  textfont: { size: 10, color: '#1a1a1a', weight: 700 },
+  yaxis: 'y2', cliponaxis: false
+});
+
+Plotly.newPlot('chart_cn_vendors', cnStackTraces, {
+  barmode: 'stack',
+  yaxis: { automargin:true, range:[0, 8400], domain:[0.10, 0.92], showticklabels:false, showgrid:false, zeroline:false },
+  yaxis2: {
+    ticksuffix:'%', range:[-6, 6], showticklabels: false,
+    domain: [0.92, 1], showgrid:false, zeroline:false
+  },
+  xaxis: { type:'category', tickfont:{size:11, color:'#1a1a1a'} },
+  showlegend: true,
+  legend: { orientation:'h', y:-0.05, x:0.5, xanchor:'center', font:{size:10, color:'#1a1a1a'} },
+  margin: { t:6, b:30, l:6, r:6 }, bargap:0.4,
+  font: PLOTLY_FONT, paper_bgcolor:'transparent', plot_bgcolor:'transparent'
+}, {responsive:true, displayModeBar:false});
+
+
+
+
+
+
+
+
+
+// ===== 海外热力图 =====
+{
+  const regions = ['印度','东南亚','欧洲','北美','中东非','拉美','日本'];
+  // 顺序底→顶（Plotly heatmap 默认 y 第一项在底部）
+  const brands = ['传音','华为','OPPO','vivo','荣耀','小米','三星','苹果'];
+  const dataMap = {
+    '苹果': [9, 9, 30, 56, 9, 12, 50],
+    '三星': [16, 22, 35, 27, 19, 38, 12],
+    '小米': [13, 14, 16, 0, 12, 14, 4],
+    '荣耀': [6, 6, 7, 0, 9, 5, 0],
+    'vivo': [19, 13, 1, 0, 4, 0, 0],
+    'OPPO': [13, 18, 3, 0, 5, 0, 0],
+    '华为': [0, 2, 1, 0, 3, 0, 0],
+    '传音': [8, 11, 0, 0, 30, 3, 0]
+  };
+  const z = brands.map(b => dataMap[b]);
+  Plotly.newPlot('chart_heatmap', [{
+    z: z, x: regions, y: brands, type:'heatmap',
+    colorscale:[[0,'#f8fafc'],[0.3,'#bfdbfe'],[0.6,'#3b82f6'],[1,'#1e3a8a']],
+    text: z.map(row => row.map(v => v>0 ? v.toFixed(0)+'%' : '')),
+    texttemplate:'%{text}', textfont:{size:11},
+    hovertemplate:'%{y} 在 %{x}: %{z}%<extra></extra>',
+    colorbar:{title:{text:'%', font:{size:9}}, tickfont:{size:8}, thickness:5, len:0.7, x:1.0, xpad:0}
+  }], {
+    margin:{t:4, b:26, l:36, r:0},
+    xaxis:{tickfont:{size:11, weight:700, color:'#1a1a1a'}}, yaxis:{tickfont:{size:11, weight:700, color:'#1a1a1a'}, automargin:true},
+    font: PLOTLY_FONT, paper_bgcolor:'transparent', plot_bgcolor:'transparent'
+  }, {responsive:true, displayModeBar:false});
+}
+
+
+
+// ===== 反拦截：各厂商加权拦截率 =====
+{
+  const x = ['Xiaomi','OPPO','vivo','Honor'];
+  const y = [0, 11.3, 9.8, 20.6];
+  const colors = ['#ff8c00', '#10b981', '#3b82f6', '#06b6d4'];
+  const yoy = ['同比 — 0pp', '同比 ↓ 1.7pp', '同比 ↓ 90.2pp', '同比 ↑ 0.6pp'];
+  const mom = ['环比 — 0pp', '环比 ↓ 3.7pp', '环比 ↓ 11.2pp', '环比 ↓ 4.4pp'];
+  Plotly.newPlot('chart_block_brand', [{
+    x: x, y: y, type: 'bar',
+    marker: { color: colors },
+    text: y.map(v => `<b>${v}%</b>`),
+    textposition: 'outside', cliponaxis: false,
+    textfont: { size: 13, color: '#1a1a1a', weight: 800 },
+    hovertemplate: '%{x}: %{y}%<extra></extra>'
+  }], {
+    yaxis: { range: [0, 23], showticklabels: false, showgrid: false, zeroline: false },
+    xaxis: { tickfont: { size: 12, color: '#1a1a1a', weight: 700 } },
+    margin: { t: 20, b: 80, l: 6, r: 6 }, bargap: 0.35,
+    font: PLOTLY_FONT, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    annotations: x.map((b, i) => [
+      { text: yoy[i], xref: 'x', yref: 'paper', x: b, y: -0.18, xanchor: 'center', showarrow: false, font: { size: 10, color: '#737373' } },
+      { text: mom[i], xref: 'x', yref: 'paper', x: b, y: -0.32, xanchor: 'center', showarrow: false, font: { size: 10, color: '#a3a3a3' } }
+    ]).flat()
+  }, { responsive: true, displayModeBar: false });
+}
+
+// ===== 反拦截：各渠道总拦截率 =====
+{
+  const channels = ['QQ','QQ浏览器','官网','腾讯视频','手机管家','腾讯新闻','微信','应用宝'];
+  const rates = [4.4, 5.3, 17.7, 4.5, 4.6, 3.4, 4.8, 3.8];
+  const colors = rates.map(r => r > 10 ? '#ef4444' : '#3b82f6');
+  Plotly.newPlot('chart_block_channel', [{
+    x: channels, y: rates, type: 'bar',
+    marker: { color: colors },
+    text: rates.map(v => `<b>${v}%</b>`),
+    textposition: 'outside', cliponaxis: false,
+    textfont: { size: 16, color: '#1a1a1a', weight: 800 },
+    hovertemplate: '%{x}: %{y}%<extra></extra>'
+  }], {
+    yaxis: { range: [0, 19], showticklabels: false, showgrid: false, zeroline: false },
+    xaxis: { tickfont: { size: 10, color: '#1a1a1a', weight: 700 }, tickangle: 0 },
+    margin: { t: 20, b: 30, l: 6, r: 6 }, bargap: 0.25,
+    font: PLOTLY_FONT, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent'
+  }, { responsive: true, displayModeBar: false });
+}
+
+
+</script>
+
+</body>
+</html>

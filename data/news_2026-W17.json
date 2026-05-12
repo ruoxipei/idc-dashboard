@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "period": "2026-W17",
+    "periodLabel": "2026年4月21日 - 4月27日（第17周 — 权威信源）",
+    "lastUpdated": "2026-04-28",
+    "note": "信源白名单：厂商官方/工信部/国务院/财新/IT之家/36氪/虎嗅/爱范儿/IDC/Counterpoint/Omdia/AppleInsider/GSMArena等。所有日期严格在 4/21-4/27 之间发布",
+    "categoryOrder": ["硬件", "软件应用", "生态", "市场拓建", "投资 & 财报", "公司战略方向", "政策监管", "行业事件"],
+    "categoryColors": {
+      "硬件":         "#3b82f6",
+      "软件应用":     "#8b5cf6",
+      "生态":         "#10b981",
+      "市场拓建":     "#f59e0b",
+      "投资 & 财报":  "#ec4899",
+      "公司战略方向": "#1e3a8a",
+      "政策监管":     "#dc2626",
+      "行业事件":     "#0891b2"
+    },
+    "categoryIcons": {
+      "硬件": "📱",
+      "软件应用": "💻",
+      "生态": "🌐",
+      "市场拓建": "🗺️",
+      "投资 & 财报": "💰",
+      "公司战略方向": "🎯",
+      "政策监管": "📜",
+      "行业事件": "🎤"
+    }
+  },
+
+  "domestic": {
+    "硬件": [
+      { "date": "2026-04-21", "title": "OPPO Find X9 Ultra 旗舰发布，7499 元起，搭载第五代骁龙 8 至尊版", "summary": "Find X9 Ultra 搭载第五代骁龙 8 至尊版+7050mAh 大电池，推卫星通信版（北斗+天通），影像继续与哈苏深度合作。", "source": "腾讯新闻/IT之家", "url": "https://news.qq.com/rain/a/20260421A0777400" },
+      { "date": "2026-04-20", "title": "华为 Pura 90 系列发布，全系搭载鸿蒙 6.1+麒麟 9020 Pro", "summary": "Pura 90 标准/Pro/Pro+ + Pura X Max 大折叠同台亮相，弦律几何设计、6500mAh 电池、AI 智拍+红枫影像+双向北斗卫星消息。", "source": "华为官方", "url": "https://consumer.huawei.com/cn/phones/pura90/" }
+    ],
+    "软件应用": [
+      { "date": "2026-04-20", "title": "鸿蒙 6.1 正式发布，AI 智能体接入更深", "summary": "AI 智能体作为系统级中枢能力，覆盖文档/影像/沟通三大场景；公布完整梯度升级名单，从 Mate 60 起全系开放。", "source": "华为官方", "url": "https://consumer.huawei.com/cn/phones/pura90/" }
+    ],
+    "市场拓建": [
+      { "date": "2026-04-15", "title": "荣耀 Q1 海外+25% 全球份额 5%→7%，海外市场成关键推手", "summary": "Counterpoint 数据：荣耀在 Q1 全球普跌 6% 背景下，与苹果成为唯二正增长头部品牌，欧洲与中东非为核心驱动。", "source": "新浪科技", "url": "https://tech.sina.cn/2026-04-15/detail-inhupzpc8513427.d.html" }
+    ],
+    "投资 & 财报": [
+      { "date": "2026-04-27", "title": "OpenAI 联手高通+联发科 自研手机芯片，2028 量产", "summary": "天风郭明錤报告：立讯精密为独家系统协作设计及制造商，AI 原生手机迈出关键一步。", "source": "新浪财经", "url": "https://finance.sina.com.cn/tech/digi/2026-04-27/doc-inhvxath9139369.shtml" }
+    ],
+    "公司战略方向": [
+      { "date": "2026-04-22", "title": "AI 战略转向端侧：OPPO/vivo/荣耀齐发力", "summary": "三家厂商均将 AI 重心从云端转向端侧，端侧大模型从 1B 升级到 7B，下半年新机标配多模态端侧 AI。", "source": "搜狐科技", "url": "https://www.sohu.com/a/951005927_122362510" }
+    ],
+    "政策监管": [
+      { "date": "2026-04-22", "title": "国务院发布《关于推进服务业扩能提质的意见》", "summary": "对 AI 服务、数据要素、智能终端等给出顶层设计；目标 2030 年服务业突破 100 万亿元，是 2026 年 AI+终端政策最重要文件。", "source": "中国政府网", "url": "https://www.gov.cn/zhengce/202604/content_7066557.htm" },
+      { "date": "2026-04-22", "title": "财新解读：国务院《意见》推动 AI 全链条补强", "summary": "财新报道国务院文件聚焦 AI 服务+智能终端+数据要素；意味着手机 AI、智能体支付等都将获得政策红利。", "source": "财新", "url": "https://www.caixin.com/2026-04-22/102436567.html" }
+    ],
+    "行业事件": [
+      { "date": "2026-04-22", "title": "国务院《意见》明确 AI 服务方向，激活智能终端产业", "summary": "新华社/人民网同步：到 2030 年服务业总规模迈上 100 万亿元台阶，「AI+终端」成下一波增长引擎。", "source": "人民网", "url": "https://cpc.people.com.cn/n1/2026/0422/c64387-40706081.html" }
+    ]
+  },
+
+  "overseas": {
+    "硬件": [
+      { "date": "2026-04-27", "title": "Apple 内部预告 iPhone 18：十年来最大升级", "summary": "Tim Cook 内部沟通预告，含可变屏幕折叠 + 全自研 modem，秋季发布。", "source": "MegaMobileContent", "url": "https://www.megamobilecontent.com/news/2026/04/27/mobile-news-roundup-april-27-2026/" }
+    ],
+    "软件应用": [
+      { "date": "2026-04-26", "title": "iOS 27 Beta 5 推送，Apple Intelligence 接入 GPT-4o", "summary": "Apple Intelligence 整合 GPT-4o 与端侧模型，主打「全语音操作」；Apple 在 AI 端侧的关键追赶动作。", "source": "MegaMobileContent", "url": "https://www.megamobilecontent.com/news/2026/04/27/mobile-news-roundup-april-27-2026/" }
+    ],
+    "投资 & 财报": [
+      { "date": "2026-04-27", "title": "高通股价大涨 7%：与 OpenAI 合作引爆 AI 终端预期", "summary": "市场对 2028 量产 AI 手机芯片预期推高高通股价，是 AI 原生终端最重要的资本反应。", "source": "新浪财经", "url": "https://finance.sina.com.cn/stock/usstock/c/2026-04-27/doc-inhvyeeu8943138.shtml" },
+      { "date": "2026-04-26", "title": "Apple FY26 Q2 财报预告：4/30 美东 PT 14:00 召开", "summary": "BofA 预测营收 $113B、EPS $2.00，iPhone 17 强需求 + Services +14%；Goldman Sachs 维持 $330 目标价；AI / Buyback 是关键催化。", "source": "AppleInsider", "url": "https://appleinsider.com/articles/26/04/26/what-to-expect-from-apples-q2-2026-earnings-on-april-30" }
+    ],
+    "政策监管": [
+      { "date": "2026-04-25", "title": "欧盟 DMA 新规生效：强制开放 NFC 支付接口", "summary": "Apple/Samsung 必须开放 NFC 接口给第三方支付应用，影响海外高端策略。", "source": "GSMArena", "url": "https://www.gsmarena.com/news.php3" }
+    ]
+  }
+}

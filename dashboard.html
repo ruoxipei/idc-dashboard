@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>IDC PRC 智能手机出货量 数据看板</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #f1f5f9; color: #1e293b; font-size: 13px; line-height: 1.55;
+}
+/* ============ Header ============ */
+header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 60%, #6d28d9 100%);
+  color: #fff; padding: 14px 24px;
+  box-shadow: 0 2px 12px rgba(30,58,138,0.25);
+  position: sticky; top: 0; z-index: 100;
+}
+header .top { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; }
+header h1 { font-size: 17px; font-weight: 700; }
+header .meta { font-size: 12px; opacity: 0.9; }
+header .meta b { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+
+/* ============ Filter Bar ============ */
+.filter-bar {
+  background: #fff; padding: 10px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+  position: sticky; top: 56px; z-index: 99;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.filter-group { display: flex; align-items: center; gap: 8px; }
+.filter-group .label { font-size: 12px; color: #64748b; font-weight: 600; }
+.brand-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+.brand-pill {
+  padding: 4px 10px; border-radius: 14px; font-size: 12px; cursor: pointer;
+  border: 1.5px solid; user-select: none; transition: all 0.15s;
+  background: #fff; opacity: 0.5;
+}
+.brand-pill.active { opacity: 1; color: #fff; }
+.brand-pill:hover { opacity: 0.85; }
+
+select, input[type="text"], button {
+  border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 10px;
+  font-size: 12px; background: #fff; color: #1e293b;
+}
+button {
+  background: #1e3a8a; color: #fff; border: none; cursor: pointer; font-weight: 600;
+  transition: all 0.15s;
+}
+button:hover { background: #1e40af; }
+button.ghost { background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a; }
+button.ghost:hover { background: #eff6ff; }
+
+.preset-btn {
+  font-size: 11px !important; padding: 3px 9px !important;
+}
+.preset-btn.active {
+  background: #1e3a8a !important; color: #fff !important; border-color: #1e3a8a !important;
+}
+#startMonth, #endMonth { min-width: 90px; }
+
+
+
+/* ============ Tabs ============ */
+.tabs {
+  display: flex; gap: 2px; background: #fff;
+  padding: 0 24px; border-bottom: 2px solid #e2e8f0;
+  position: sticky; top: 102px; z-index: 98;
+}
+.tab {
+  padding: 10px 20px; cursor: pointer; font-weight: 600;
+  color: #64748b; border-bottom: 3px solid transparent;
+  transition: all 0.15s; font-size: 13px;
+}
+.tab:hover { color: #1e3a8a; background: #f8fafc; }
+.tab.active { color: #1e3a8a; border-bottom-color: #1e3a8a; }
+
+/* ============ Content ============ */
+main { padding: 18px 24px; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+.card {
+  background: #fff; border-radius: 10px; padding: 16px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 14px;
+}
+.card-title {
+  font-size: 14px; font-weight: 700; color: #1e3a8a; margin-bottom: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-title .actions { display: flex; gap: 6px; }
+.card-title button {
+  font-size: 11px; padding: 3px 8px; background: #f1f5f9; color: #475569;
+}
+.card-title button:hover { background: #e2e8f0; }
+
+.kpi-total-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;
+}
+.kpi-total {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+  color: #fff; border-radius: 10px; padding: 16px 20px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  box-shadow: 0 2px 8px rgba(30,58,138,0.2);
+}
+.kpi-total.alt { background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%); box-shadow: 0 2px 8px rgba(109,40,217,0.2); }
+.kpi-total .left { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.kpi-total .label-big { font-size: 12.5px; opacity: 0.92; }
+.kpi-total .value-big { font-size: 28px; font-weight: 800; }
+.kpi-total .unit { font-size: 13px; opacity: 0.85; }
+.kpi-total .compare { display: flex; gap: 8px; font-size: 11.5px; flex-wrap: wrap; }
+.kpi-total .compare .item { background: rgba(255,255,255,0.16); padding: 5px 10px; border-radius: 14px; }
+.kpi-total .compare b { font-size: 13px; }
+.kpi-total .pos-w { color: #4ade80; }
+.kpi-total .neg-w { color: #fca5a5; }
+
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  margin-bottom: 14px;
+}
+@media (max-width: 700px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+
+.kpi {
+  background: #fff; border-radius: 10px; padding: 10px 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  border-left: 4px solid #94a3b8;
+  min-width: 0; /* allow grid item to shrink */
+}
+.kpi .label { font-size: 11px; color: #64748b; }
+.kpi .value { font-size: 20px; font-weight: 800; color: #1e293b; margin: 3px 0; white-space: nowrap; }
+.kpi .delta { font-size: 11px; font-weight: 600; white-space: nowrap; }
+.delta.pos { color: #16a34a; }
+.delta.neg { color: #dc2626; }
+.delta.flat { color: #64748b; }
+/* 全局正负色（用于表格 td） */
+td.pos, .pos { color: #16a34a; font-weight: 600; }
+td.neg, .neg { color: #dc2626; font-weight: 600; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+@media (max-width: 1100px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid #f1f5f9; }
+th { background: #f8fafc; color: #475569; font-weight: 600; font-size: 11px; }
+th:first-child, td:first-child { text-align: left; }
+tr:hover { background: #f8fafc; }
+.total-row { background: #eef2ff !important; font-weight: 700; }
+
+.chart { width: 100%; min-height: 280px; }
+
+#status {
+  position: fixed; bottom: 14px; right: 14px;
+  background: #1e293b; color: #fff; padding: 8px 14px; border-radius: 6px;
+  font-size: 12px; opacity: 0; transition: opacity 0.3s; z-index: 200;
+}
+#status.show { opacity: 0.92; }
+
+.empty {
+  padding: 60px 20px; text-align: center; color: #94a3b8;
+}
+
+/* compact insight */
+.note {
+  background: #eff6ff; border-left: 3px solid #3b82f6;
+  padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #1e3a8a;
+  margin: 10px 0;
+}
+
+/* Section Header */
+.section-anchor {
+  background: linear-gradient(90deg, #1e3a8a 0%, #3730a3 100%);
+  color: #fff; padding: 10px 16px; border-radius: 8px;
+  margin: 18px 0 12px; font-weight: 700; font-size: 13.5px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 2px 6px rgba(30,58,138,0.18);
+  scroll-margin-top: 130px; /* 避开顶部 sticky 区域 */
+}
+.section-anchor .num {
+  background: rgba(255,255,255,0.22); width: 24px; height: 24px;
+  border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
+}
+.section-anchor .desc {
+  font-weight: 400; font-size: 11.5px; opacity: 0.85; margin-left: auto;
+}
+.section-nav {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
+  padding: 8px 12px; background: #fff; border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  align-items: center;
+}
+.section-nav a {
+  font-size: 12px; color: #1e3a8a; text-decoration: none;
+  padding: 4px 10px; background: #eff6ff; border-radius: 12px;
+  font-weight: 600; transition: all 0.15s;
+}
+.section-nav a:hover { background: #1e3a8a; color: #fff; }
+
+/* drag overlay */
+#dropzone {
+  position: fixed; inset: 0; background: rgba(30,58,138,0.85); color: #fff;
+  display: none; align-items: center; justify-content: center; z-index: 9999;
+  font-size: 22px; font-weight: 700; pointer-events: none;
+}
+#dropzone.show { display: flex; }
+
+/* ============ News Tab ============ */
+.news-toolbar {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  background: #fff; padding: 10px 14px; border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 14px;
+}
+.news-toggle-group { display: flex; gap: 4px; background: #f1f5f9; padding: 3px; border-radius: 8px; }
+.news-toggle {
+  padding: 5px 12px; font-size: 12px; font-weight: 600; color: #64748b;
+  background: transparent; border: none; border-radius: 6px; cursor: pointer;
+  transition: all 0.15s;
+}
+.news-toggle.active { background: #1e3a8a; color: #fff; box-shadow: 0 1px 3px rgba(30,58,138,0.3); }
+.news-toggle:hover:not(.active) { color: #1e3a8a; }
+
+.news-section {
+  background: #fff; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.news-section-header {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 10px; margin-bottom: 12px;
+  border-bottom: 2px solid #f1f5f9;
+}
+.news-section-header .icon { font-size: 18px; }
+.news-section-header .title {
+  font-size: 14px; font-weight: 700; color: #1e3a8a;
+}
+.news-section-header .count {
+  font-size: 11px; color: #94a3b8; background: #f1f5f9;
+  padding: 2px 8px; border-radius: 10px;
+}
+.news-section-header .bar {
+  width: 4px; height: 18px; border-radius: 2px;
+}
+.news-list { display: flex; flex-direction: column; gap: 8px; }
+.news-item {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px; padding: 10px 12px; border-radius: 8px;
+  background: #f8fafc; transition: all 0.15s;
+}
+.news-item:hover { background: #eff6ff; transform: translateX(2px); }
+.news-item .meta {
+  font-size: 11px; color: #94a3b8;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.news-item .meta .date { font-weight: 700; color: #475569; font-size: 12px; }
+.news-item .meta .source {
+  display: inline-block; padding: 2px 6px; background: #fff; border-radius: 4px;
+  border: 1px solid #e2e8f0; font-size: 10px; color: #64748b;
+  text-align: center; word-break: keep-all;
+}
+.news-item .body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.news-item .body .title {
+  font-size: 13.5px; font-weight: 700; color: #1e293b; line-height: 1.45;
+}
+.news-item .body .title a { color: inherit; text-decoration: none; }
+.news-item .body .title a:hover { color: #1e3a8a; text-decoration: underline; }
+.news-item .body .summary {
+  font-size: 12px; color: #475569; line-height: 1.55;
+}
+.news-item .body .link {
+  font-size: 11px; color: #3b82f6; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;
+}
+.news-item .body .link:hover { text-decoration: underline; }
+.news-empty {
+  padding: 20px; text-align: center; color: #94a3b8; font-size: 12px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <div>
+      <h1>📊 IDC PRC 智能手机出货量 数据看板</h1>
+      <div class="meta">
+        数据期：<b id="periodLabel">--</b>
+        覆盖：<b id="monthRange">--</b>
+        样本：<b id="modelCount">--</b> 机型
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <select id="periodSelect" title="切换历史月份"></select>
+      <button class="ghost" id="loadFileBtn">📂 加载本地数据 / Excel</button>
+      <input type="file" id="fileInput" accept=".json,.xlsx" style="display:none;">
+    </div>
+  </div>
+</header>
+
+<!-- 全局筛选器 -->
+<div class="filter-bar">
+  <div class="filter-group">
+    <span class="label">厂商：</span>
+    <div class="brand-pills" id="brandPills"></div>
+  </div>
+  <div class="filter-group">
+    <span class="label">时间范围：</span>
+    <select id="startMonth" title="起始月份"></select>
+    <span style="color:#94a3b8;">~</span>
+    <select id="endMonth" title="结束月份"></select>
+    <span style="color:#94a3b8; font-size:11px;">vs</span>
+    <span id="comparePeriod" style="font-size:11px; color:#0ea5e9; font-weight:600; padding:3px 8px; background:#eff6ff; border-radius:10px;">--</span>
+  </div>
+  <div class="filter-group">
+    <span class="label">快捷：</span>
+    <button class="ghost preset-btn" data-preset="latest">最新月</button>
+    <button class="ghost preset-btn" data-preset="latest3">近3月</button>
+    <button class="ghost preset-btn" data-preset="latest6">近6月</button>
+    <button class="ghost preset-btn" data-preset="curQ">最新季度</button>
+    <button class="ghost preset-btn" data-preset="curY">本年至今</button>
+    <button class="ghost preset-btn" data-preset="lastY">最近12月</button>
+    <button class="ghost preset-btn" data-preset="all">全部</button>
+  </div>
+  <button class="ghost" id="resetFilter" style="margin-left:auto;">重置</button>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="overview">📈 总览</div>
+  <div class="tab" data-tab="brand">🏢 国内厂商下钻</div>
+  <div class="tab" data-tab="harmony">🟥 鸿蒙专题</div>
+  <div class="tab" data-tab="overseas">🌍 海外 / 全球</div>
+  <div class="tab" data-tab="news">📰 行业新闻动态</div>
+</div>
+
+<main>
+  <!-- ===== Tab 1: 总览 ===== -->
+  <div class="tab-pane active" id="tab-overview">
+    <div class="kpi-total-row" id="overviewKpiTotal"></div>
+    <div class="kpi-grid" id="overviewKpiBrands"></div>
+
+    <div class="card">
+      <div class="card-title">月度出货走势（按厂商堆叠）
+        <div class="actions">
+          <button onclick="downloadChart('chartMonthlyStack', '月度出货')">📷 PNG</button>
+          <button onclick="downloadTable('overviewMonthlyTable', '月度出货')">📊 Excel</button>
+        </div>
+      </div>
+      <div id="chartMonthlyStack" class="chart" style="height:580px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📅 今年累计表现 (YTD) ｜ 各厂商当年至今出货 + 同比
+        <div class="actions"><button onclick="downloadTable('overviewYtdTable', 'YTD累计')">📊 Excel</button></div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="overviewYtdTable"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">当期 TOP10 机型（按时间筛选合计，仅 HMOVR）
+        <div class="actions"><button onclick="downloadChart('chartTopModel', 'TOP机型')">📷</button></div>
+      </div>
+      <div id="chartTopModel" class="chart" style="height:380px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">月度数据明细表
+        <div class="actions"><button onclick="downloadTable('overviewMonthlyTable', '月度明细')">📊 Excel</button></div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="overviewMonthlyTable"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Tab 2: 厂商深钻（合并 厂商/机型/价格） ===== -->
+  <div class="tab-pane" id="tab-brand">
+    <!-- 锚点导航 -->
+    <div class="section-nav">
+      <span style="font-size:12px; color:#64748b; padding:4px 6px;">快速跳转：</span>
+      <a href="#sec-trend">① 月度走势</a>
+      <a href="#sec-model">② 主力机型</a>
+      <a href="#sec-price">③ 价格段结构</a>
+      <a href="#sec-high">④ 高端化趋势</a>
+      <span style="margin-left:auto; font-size:11.5px; color:#64748b;">📌 所有图表跟随顶部「厂商」与「时间范围」筛选</span>
+    </div>
+
+    <!-- ① 月度走势 -->
+    <div class="section-anchor" id="sec-trend">
+      <span class="num">1</span> 月度出货走势对比
+      <span class="desc">选中厂商的月度出货曲线（按时间筛选）</span>
+    </div>
+    <div class="card">
+      <div class="card-title">月度出货对比（折线）
+        <div class="actions"><button onclick="downloadChart('chartBrandTrend', '厂商月度走势')">📷 PNG</button></div>
+      </div>
+      <div id="chartBrandTrend" class="chart" style="height:340px;"></div>
+    </div>
+
+    <!-- ② 主力机型 -->
+    <div class="section-anchor" id="sec-model">
+      <span class="num">2</span> 主力机型与旗舰代际
+      <span class="desc">各厂商当期 TOP10 / 旗舰系列代际对比 / 机型生命周期</span>
+    </div>
+    <div class="card">
+      <div class="card-title">各选中厂商当期 TOP10 机型 <span style="font-weight:400;font-size:11.5px;color:#64748b;">（按顶部时间筛选合计）</span>
+        <div class="actions"><button onclick="downloadChart('chartBrandTop10', '厂商TOP10')">📷 PNG</button></div>
+      </div>
+      <div id="chartBrandTop10" class="chart" style="min-height:200px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">HMOVR 旗舰系列代际对比（M0~M5 累计）
+        <div class="actions"><button onclick="downloadChart('chartFlagshipBar', '旗舰代际')">📷 PNG</button></div>
+      </div>
+      <div id="chartFlagshipBar" class="chart" style="height:340px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">机型搜索与生命周期对比
+        <div class="actions">
+          <span style="font-weight:400; font-size:11.5px; color:#64748b;">在下表勾选 ≤ 6 个机型对比 M0~Mn 生命周期</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+        <input type="text" id="modelSearch" placeholder="搜索机型名称（如 Mate 80、iPhone 17）" style="flex:1; min-width:240px;">
+        <button id="modelSearchBtn">搜索</button>
+        <button class="ghost" id="modelClearBtn">清空已选</button>
+      </div>
+      <div style="max-height:240px; overflow-y:auto; margin-bottom:14px;">
+        <table id="modelSearchTable"></table>
+      </div>
+      <div id="chartModelLifecycle" class="chart" style="height:360px;"></div>
+    </div>
+
+    <!-- ③ 价格段结构 -->
+    <div class="section-anchor" id="sec-price">
+      <span class="num">3</span> 价格段份额结构
+      <span class="desc">价格段份额季度演变 / 当期价格段份额对比 / 同比变化明细</span>
+    </div>
+    <div class="card">
+      <div class="card-title">价格段份额变化（季度堆叠百分比）
+        <div class="actions">
+          <button class="ghost" id="priceViewMarket">全市场</button>
+          <button class="ghost" id="priceViewBrand">选中厂商合计</button>
+          <button onclick="downloadChart('chartPriceStack', '价格段堆叠')">📷 PNG</button>
+        </div>
+      </div>
+      <div id="chartPriceStack" class="chart" style="height:380px;"></div>
+    </div>
+
+    <!-- ④ 高端化趋势 -->
+    <div class="section-anchor" id="sec-high">
+      <span class="num">4</span> 高端化趋势
+      <span class="desc">$700+ 高端段份额：各厂商当期 vs 去年同期对比</span>
+    </div>
+    <div class="card">
+      <div class="card-title">$700+ 高端段份额：各厂商对比（当季 vs 去年同季）
+        <div class="actions"><button onclick="downloadChart('chartPriceHigh', '高端化趋势')">📷 PNG</button></div>
+      </div>
+      <div id="chartPriceHigh" class="chart" style="height:380px;"></div>
+    </div>
+  </div>
+
+  <!-- ===== Tab 5: 鸿蒙专题 ===== -->
+  <div class="tab-pane" id="tab-harmony">
+    <div class="kpi-grid" id="harmonyKpi" style="grid-template-columns: repeat(3, 1fr);"></div>
+
+    <div class="card">
+      <div class="card-title">华为月度出货：Next 单框 / Next 双框 / Android（堆叠）</div>
+      <div id="chartHmStack" class="chart" style="height:340px;"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Next 单框占华为出货比例（月度趋势）</div>
+        <div id="chartHmShare" class="chart" style="height:300px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">鸿蒙系列累计出货排行</div>
+        <div id="chartHmSeries" class="chart" style="height:380px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Tab 4: 海外 / 全球 ===== -->
+  <div class="tab-pane" id="tab-overseas">
+    <div class="note" style="background:#fef3c7; border-left-color:#f59e0b; color:#78350f;">
+      ⚠️ <b>数据说明</b>：本 Tab 数据来自 <b>IDC Worldwide Quarterly Mobile Phone Tracker 公开新闻稿</b>，配合 Counterpoint / Omdia 公开报告交叉验证。区域细分为合理估算（误差 ±2pp）。海外 = 全球 - 中国（按厂商倒算，中国数据来自项目内 IDC PRC 文件）。
+      仅 <b>季度粒度</b>（IDC 全球数据无月度公开）。
+    </div>
+
+    <!-- 锚点导航 -->
+    <div class="section-nav">
+      <span style="font-size:12px; color:#64748b; padding:4px 6px;">快速跳转：</span>
+      <a href="#osec-global">① 全球出货大势</a>
+      <a href="#osec-vendor">② TOP 厂商竞争</a>
+      <a href="#osec-overseas">③ 海外出货拆分</a>
+      <a href="#osec-region">④ 区域市场格局</a>
+      <a href="#osec-china-go">⑤ 中国厂商出海</a>
+    </div>
+
+    <!-- ① 全球大势 -->
+    <div class="section-anchor" id="osec-global">
+      <span class="num">1</span> 全球出货大势
+      <span class="desc">9 个季度走势 + 全球/中国/海外占比</span>
+    </div>
+    <div class="kpi-total-row" id="overseasKpiTotal" style="grid-template-columns: 1fr 1fr 1fr;"></div>
+    <div class="card">
+      <div class="card-title">全球季度出货走势（中国 vs 海外 堆叠 + YoY 折线）
+        <div class="actions"><button onclick="downloadChart('chartGlobalTrend','全球出货走势')">📷 PNG</button></div>
+      </div>
+      <div id="chartGlobalTrend" class="chart" style="height:420px;"></div>
+    </div>
+
+    <!-- ② TOP 厂商 -->
+    <div class="section-anchor" id="osec-vendor">
+      <span class="num">2</span> TOP 厂商竞争（全球）
+      <span class="desc">最新季度 8 家 TOP 厂商排名 + 海外表现</span>
+    </div>
+    <div class="card">
+      <div class="card-title">最新季度（26Q1）全球 TOP 厂商排名
+        <div class="actions"><button onclick="downloadTable('overseasTopTbl','TOP厂商')">📊 Excel</button></div>
+      </div>
+      <div style="overflow-x:auto;"><table id="overseasTopTbl"></table></div>
+    </div>
+
+    <!-- ③ 海外出货拆分 -->
+    <div class="section-anchor" id="osec-overseas">
+      <span class="num">3</span> 海外出货拆分（全球 - 中国 倒算）
+      <span class="desc">最新季度各厂商海外 vs 国内出货占比</span>
+    </div>
+    <div class="card">
+      <div class="card-title">最新季度 各厂商 海外 vs 国内出货分布
+        <div class="actions"><button onclick="downloadChart('chartOverseasSplit','海外拆分')">📷 PNG</button></div>
+      </div>
+      <div id="chartOverseasSplit" class="chart" style="height:380px;"></div>
+    </div>
+
+    <!-- ④ 区域格局 -->
+    <div class="section-anchor" id="osec-region">
+      <span class="num">4</span> 区域市场格局
+      <span class="desc">最新季度各区域 TOP 厂商份额</span>
+    </div>
+    <div class="card">
+      <div class="card-title">最新季度（26Q1）各区域 TOP 厂商份额（%）
+        <div class="actions"><button onclick="downloadChart('chartRegionShare','区域TOP厂商')">📷 PNG</button></div>
+      </div>
+      <div id="chartRegionShare" class="chart" style="height:460px;"></div>
+    </div>
+
+    <!-- ⑤ 中国厂商出海 -->
+    <div class="section-anchor" id="osec-china-go">
+      <span class="num">5</span> 中国厂商出海专题
+      <span class="desc">HMOVR + 传音 在 7 大区的份额分布（地缘倾向）</span>
+    </div>
+    <div class="card">
+      <div class="card-title">各厂商在 7 大区的份额分布（热力图）
+        <div class="actions"><button onclick="downloadChart('chartBrandRegion','品牌区域热力')">📷 PNG</button></div>
+      </div>
+      <div id="chartBrandRegion" class="chart" style="height:420px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">中国主要厂商 海外占比对比（最新季度）
+        <div class="actions"><button onclick="downloadChart('chartChinaGo','海外占比')">📷 PNG</button></div>
+      </div>
+      <div id="chartChinaGo" class="chart" style="height:340px;"></div>
+    </div>
+  </div>
+
+  <!-- ===== Tab 5: 行业新闻动态 ===== -->
+  <div class="tab-pane" id="tab-news">
+    <div class="news-toolbar">
+      <div class="news-toggle-group" id="newsRegionGroup">
+        <button class="news-toggle active" data-region="domestic">🇨🇳 国内</button>
+        <button class="news-toggle" data-region="overseas">🌍 海外</button>
+      </div>
+      <div class="news-toggle-group" id="newsPeriodGroup">
+        <button class="news-toggle active" data-period="week">📅 本周</button>
+        <button class="news-toggle" data-period="month">🗓️ 本月</button>
+      </div>
+      <div style="margin-left:auto; font-size:12px; color:#64748b;">
+        当前数据：<b id="newsPeriodLabel">--</b>
+      </div>
+    </div>
+    <div id="newsContainer"></div>
+  </div>
+</main>
+
+<div id="status">就绪</div>
+<div id="dropzone">📂 释放以加载数据文件</div>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
