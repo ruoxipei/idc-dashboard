@@ -16,6 +16,16 @@ const $$ = (sel) => document.querySelectorAll(sel);
 const fmtW = (n) => (n/10000).toFixed(1);
 const fmtPct = (n) => (n>=0?'+':'') + n.toFixed(1) + '%';
 const fmt0 = (n) => Math.round(n).toLocaleString();
+// 自适应单位：≥1亿用"亿"，否则用"万"。返回 {val, unit}
+const fmtAuto = (n) => {
+  const abs = Math.abs(n);
+  if (abs >= 1e8) return { val: (n/1e8).toFixed(2), unit: '亿' };
+  return { val: (n/10000).toFixed(1), unit: '万' };
+};
+const fmtAutoStr = (n, suffix='台') => {
+  const o = fmtAuto(n);
+  return `${o.val} ${o.unit}${suffix}`;
+};
 
 function showStatus(msg, ms=1800) {
   const el = $('#status');
@@ -237,33 +247,36 @@ function renderOverview() {
   const ytdYoyCls = ytdYoy == null ? '' : (ytdYoy >= 0 ? 'pos-w' : 'neg-w');
   const ytdLabel = `${ytdMonths[0]} ~ ${ytdMonths[ytdMonths.length-1]} (${ytdMonths.length}个月)`;
 
+  const totCurFmt = fmtAuto(totCur), ytdCurFmt = fmtAuto(ytdCur);
+  const totPrevFmt = fmtAuto(totPrev), ytdPrevFmt = fmtAuto(ytdPrev);
+  const totAvgFmt = fmtAuto(totCur/xs.length), ytdAvgFmt = fmtAuto(ytdCur/ytdMonths.length);
   $('#overviewKpiTotal').innerHTML = `
     <div class="kpi-total">
       <div class="left">
         <div>
           <div class="label-big">当期总出货量</div>
-          <div class="value-big">${fmtW(totCur)} <span class="unit">万台</span></div>
+          <div class="value-big">${totCurFmt.val} <span class="unit">${totCurFmt.unit}台</span></div>
         </div>
         <div style="font-size:11.5px; opacity:0.85;">${periodLabel}</div>
       </div>
       <div class="compare">
-        <div class="item">同期: <b>${fmtW(totPrev)}</b> 万</div>
+        <div class="item">同期: <b>${totPrevFmt.val}</b> ${totPrevFmt.unit}</div>
         <div class="item">YoY: <b class="${yoyCls}">${yoyStr}</b></div>
-        <div class="item">月均: <b>${fmtW(totCur/xs.length)}</b> 万</div>
+        <div class="item">月均: <b>${totAvgFmt.val}</b> ${totAvgFmt.unit}</div>
       </div>
     </div>
     <div class="kpi-total alt">
       <div class="left">
         <div>
           <div class="label-big">📅 今年累计 (${curYear} YTD)</div>
-          <div class="value-big">${fmtW(ytdCur)} <span class="unit">万台</span></div>
+          <div class="value-big">${ytdCurFmt.val} <span class="unit">${ytdCurFmt.unit}台</span></div>
         </div>
         <div style="font-size:11.5px; opacity:0.85;">${ytdLabel}</div>
       </div>
       <div class="compare">
-        <div class="item">去年同期: <b>${fmtW(ytdPrev)}</b> 万</div>
+        <div class="item">去年同期: <b>${ytdPrevFmt.val}</b> ${ytdPrevFmt.unit}</div>
         <div class="item">YoY: <b class="${ytdYoyCls}">${ytdYoy == null ? '-' : fmtPct(ytdYoy)}</b></div>
-        <div class="item">月均: <b>${fmtW(ytdCur/ytdMonths.length)}</b> 万</div>
+        <div class="item">月均: <b>${ytdAvgFmt.val}</b> ${ytdAvgFmt.unit}</div>
       </div>
     </div>
   `;
@@ -282,9 +295,10 @@ function renderOverview() {
   $('#overviewKpiBrands').innerHTML = brandKpis.map(k => {
     const cls = k.yoy == null ? 'flat' : (k.yoy >= 0 ? 'pos' : 'neg');
     const yoyStr = k.yoy == null ? '-' : fmtPct(k.yoy);
+    const f = fmtAuto(k.cur);
     return `<div class="kpi" style="border-left-color:${k.color}">
       <div class="label">${k.b}</div>
-      <div class="value">${fmtW(k.cur)} <span style="font-size:13px; font-weight:500; color:#94a3b8;">万</span></div>
+      <div class="value">${f.val} <span style="font-size:13px; font-weight:500; color:#94a3b8;">${f.unit}</span></div>
       <div class="delta ${cls}">YoY ${yoyStr} ｜ 份额 ${k.share.toFixed(1)}%</div>
     </div>`;
   }).join('');
@@ -813,17 +827,20 @@ function renderPrice() {
 
 // ================== Tab 5: 鸿蒙 ==================
 function renderHarmony() {
-  const hwM = Object.keys(DATA.huaweiHM).sort();
+  // 全量月份（用于"累计"统计）
+  const hmDataMonths = Object.keys(DATA.huaweiHM).sort();
+  // 时间筛选范围内、且有华为鸿蒙数据的月份（用于堆叠图/占比折线/当期 KPI）
+  const xs = getMonthsInRange();
+  const hwM = xs.filter(m => DATA.huaweiHM[m]);
   const purePure = hwM.map(m => DATA.huaweiHM[m].pure / 10000);
   const pureOld = hwM.map(m => DATA.huaweiHM[m].oldHM / 10000);
   const pureAnd = hwM.map(m => DATA.huaweiHM[m].android / 10000);
 
-  // KPI 三卡
+  // KPI 累计（全量，不随筛选变动）
   let totPure=0, totOld=0;
-  hwM.forEach(m => { totPure += DATA.huaweiHM[m].pure; totOld += DATA.huaweiHM[m].oldHM; });
+  hmDataMonths.forEach(m => { totPure += DATA.huaweiHM[m].pure; totOld += DATA.huaweiHM[m].oldHM; });
 
   // 第三、四张卡跟随顶部「时间范围」筛选
-  const xs = getMonthsInRange();
   const periodLabel = periodDesc();
   let pPure = 0, pHmAll = 0, pHwTotal = 0;
   xs.forEach(m => {
@@ -834,31 +851,34 @@ function renderHarmony() {
   const pShare = pHwTotal ? (pPure/pHwTotal*100).toFixed(1) : 0;
   const hmAllShare = pHwTotal ? (pHmAll/pHwTotal*100).toFixed(1) : 0;
 
+  const totOldFmt = fmtAuto(totOld), totPureFmt = fmtAuto(totPure);
+  const pPureFmt = fmtAuto(pPure), pHmAllFmt = fmtAuto(pHmAll), pHwTotalFmt = fmtAuto(pHwTotal);
+
   $('#harmonyKpi').innerHTML = `
     <div class="kpi" style="border-left-color:#fb923c;">
-      <div class="label">Next 双框 累计 (${hwM[0]} 起)</div>
-      <div class="value">${fmtW(totOld)} 万</div>
+      <div class="label">Next 双框 累计 (${hmDataMonths[0]} 起)</div>
+      <div class="value">${totOldFmt.val} ${totOldFmt.unit}</div>
       <div class="delta flat">含 Mate 60/70、Pura 70、nova 12/13、Mate X5/X6 等</div>
     </div>
     <div class="kpi" style="border-left-color:#dc2626;">
-      <div class="label">Next 单框 累计 (25-03 起)</div>
-      <div class="value">${fmtW(totPure)} 万</div>
+      <div class="label">纯血鸿蒙 累计 (25-03 起)</div>
+      <div class="value">${totPureFmt.val} ${totPureFmt.unit}</div>
       <div class="delta flat">含 nova 14/15、Pura 80、Mate 80、Pura X 等纯血新旗舰</div>
     </div>
     <div class="kpi" style="border-left-color:#dc2626; background:linear-gradient(135deg,#fef2f2,#fff);">
-      <div class="label">Next 单框 ${periodLabel} 出货</div>
-      <div class="value" style="color:#dc2626;">${fmtW(pPure)} 万</div>
+      <div class="label">纯血鸿蒙 ${periodLabel} 出货</div>
+      <div class="value" style="color:#dc2626;">${pPureFmt.val} ${pPureFmt.unit}</div>
       <div class="delta pos">占华为 ${pShare}%</div>
     </div>
     <div class="kpi" style="border-left-color:#f97316; background:linear-gradient(135deg,#fff7ed,#fff);">
       <div class="label">鸿蒙全量 ${periodLabel} 占华为</div>
       <div class="value" style="color:#f97316;">${hmAllShare}%</div>
-      <div class="delta flat">${fmtW(pHmAll)} 万 / ${fmtW(pHwTotal)} 万</div>
+      <div class="delta flat">${pHmAllFmt.val} ${pHmAllFmt.unit} / ${pHwTotalFmt.val} ${pHwTotalFmt.unit}</div>
     </div>`;
 
-  // 堆叠图
+  // 堆叠图（随时间筛选联动）
   Plotly.newPlot('chartHmStack', [
-    { x: hwM, y: purePure, name:'Next 单框 (HarmonyOS NEXT)', type:'bar', marker:{color:'#dc2626'} },
+    { x: hwM, y: purePure, name:'纯血鸿蒙 (HarmonyOS NEXT)', type:'bar', marker:{color:'#dc2626'} },
     { x: hwM, y: pureOld, name:'Next 双框', type:'bar', marker:{color:'#fb923c'} },
     { x: hwM, y: pureAnd, name:'Android', type:'bar', marker:{color:'#94a3b8'} }
   ], {
@@ -867,7 +887,7 @@ function renderHarmony() {
     margin:{t:20, b:60, l:55, r:30}
   }, {responsive:true, displayModeBar:false});
 
-  // 占比折线
+  // 占比折线（随时间筛选联动）
   const totalArr = hwM.map(m => (DATA.huaweiHM[m].pure + DATA.huaweiHM[m].oldHM + DATA.huaweiHM[m].android));
   const pureShare = hwM.map((m,i) => totalArr[i] ? (DATA.huaweiHM[m].pure/totalArr[i]*100) : 0);
   Plotly.newPlot('chartHmShare', [{
@@ -886,7 +906,7 @@ function renderHarmony() {
     y: series.map(s => s.series),
     type:'bar', orientation:'h',
     marker:{color: series.map(s => s.isPure ? '#dc2626' : '#fb923c')},
-    text: series.map(s => fmtW(s.total)+'万 '+(s.isPure?'[Next 单框]':'[Next 双框]')),
+    text: series.map(s => fmtW(s.total)+'万 '+(s.isPure?'[纯血鸿蒙]':'[Next 双框]')),
     textposition:'outside', textfont:{size:10}, cliponaxis:false
   }], {
     yaxis:{autorange:'reversed', automargin:true},
