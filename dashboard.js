@@ -822,15 +822,17 @@ function renderHarmony() {
   let totPure=0, totOld=0;
   hwM.forEach(m => { totPure += DATA.huaweiHM[m].pure; totOld += DATA.huaweiHM[m].oldHM; });
 
-  // 第三张卡跟随顶部「时间范围」筛选
+  // 第三、四张卡跟随顶部「时间范围」筛选
   const xs = getMonthsInRange();
   const periodLabel = periodDesc();
-  let pPure = 0, pHwTotal = 0;
+  let pPure = 0, pHmAll = 0, pHwTotal = 0;
   xs.forEach(m => {
     pPure += DATA.huaweiHM[m]?.pure || 0;
+    pHmAll += (DATA.huaweiHM[m]?.pure || 0) + (DATA.huaweiHM[m]?.oldHM || 0);
     pHwTotal += DATA.groupMonthly['华为']?.[m] || 0;
   });
   const pShare = pHwTotal ? (pPure/pHwTotal*100).toFixed(1) : 0;
+  const hmAllShare = pHwTotal ? (pHmAll/pHwTotal*100).toFixed(1) : 0;
 
   $('#harmonyKpi').innerHTML = `
     <div class="kpi" style="border-left-color:#fb923c;">
@@ -847,6 +849,11 @@ function renderHarmony() {
       <div class="label">Next 单框 ${periodLabel} 出货</div>
       <div class="value" style="color:#dc2626;">${fmtW(pPure)} 万</div>
       <div class="delta pos">占华为 ${pShare}%</div>
+    </div>
+    <div class="kpi" style="border-left-color:#f97316; background:linear-gradient(135deg,#fff7ed,#fff);">
+      <div class="label">鸿蒙全量 ${periodLabel} 占华为</div>
+      <div class="value" style="color:#f97316;">${hmAllShare}%</div>
+      <div class="delta flat">${fmtW(pHmAll)} 万 / ${fmtW(pHwTotal)} 万</div>
     </div>`;
 
   // 堆叠图
