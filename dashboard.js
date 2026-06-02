@@ -90,7 +90,7 @@ function comparePeriodDesc() {
 async function loadData(url='data/latest.json') {
   showStatus('加载数据中...');
   try {
-    const res = await fetch(url);
+    const res = await fetch(url + (url.includes('?')?'&':'?') + 't=' + Date.now());
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     DATA = await res.json();
     // 并行加载海外/新闻数据（失败不阻塞）
@@ -107,7 +107,7 @@ async function loadData(url='data/latest.json') {
 let OVERSEAS = null;
 async function loadOverseasData() {
   try {
-    const res = await fetch('data/overseas_2026Q1.json');
+    const res = await fetch('data/overseas_2026Q1.json?t=' + Date.now());
     if (!res.ok) return;
     OVERSEAS = await res.json();
     if (DATA) renderOverseas();
