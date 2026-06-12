@@ -929,6 +929,30 @@ function downloadTable(tableId, filename) {
   showStatus('📊 已导出 Excel');
 }
 
+function downloadHMData() {
+  const xs = getMonthsInRange();
+  const rows = xs.filter(m => DATA.huaweiHM[m]).map(m => {
+    const h = DATA.huaweiHM[m];
+    const total = DATA.groupMonthly['华为']?.[m] || 0;
+    return [m, h.pure, h.oldHM, h.android, total];
+  });
+  if (!rows.length) { showStatus('❌ 当前筛选范围无鸿蒙数据'); return; }
+  const header = ['月份', '纯血鸿蒙(HarmonyOS NEXT)', 'Next双框', 'Android', '华为总计'];
+  const csv = [header, ...rows].map(r => r.map(c => {
+    const s = String(c).replace(/"/g, '""');
+    return /[\,"\n\r]/.test(s) ? '"' + s + '"' : s;
+  }).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `华为鸿蒙月度出货_${periodDesc()}_${DATA.meta.period}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+  showStatus('📥 已导出 CSV：鸿蒙月度出货数据');
+}
+
 // ================== 事件绑定 ==================
 function bindEvents() {
   $$('.tab').forEach(tab => tab.onclick = () => {
