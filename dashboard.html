@@ -407,8 +407,16 @@ tr:hover { background: #f8fafc; }
         <div id="chartRmbPriceBrand" class="chart" style="height:360px;"></div>
       </div>
       <div class="card">
-        <div class="card-title">6k+ 高端占比季度趋势
-          <div class="actions"><button onclick="downloadChart('chartRmbHighTrend', '6k高端占比趋势')">📷 PNG</button></div>
+        <div class="card-title">价格区间份额 YoY 趋势（pp）
+          <div class="actions">
+            <select id="rmbYoyTierSelect" style="font-size:11px; padding:3px 6px;">
+              <option value="2k以下">&lt;¥2k</option>
+              <option value="2k-4k">¥2k-4k</option>
+              <option value="4k-6k">¥4k-6k</option>
+              <option value="6k以上" selected>¥6k+</option>
+            </select>
+            <button onclick="downloadChart('chartRmbHighTrend', '价格区间YoY趋势')">📷 PNG</button>
+          </div>
         </div>
         <div id="chartRmbHighTrend" class="chart" style="height:360px;"></div>
       </div>
