@@ -989,7 +989,7 @@ function renderHarmony() {
       <div class="delta pos">占华为 ${pShare}%</div>
     </div>
     <div class="kpi" style="border-left-color:#f97316; background:linear-gradient(135deg,#fff7ed,#fff);">
-      <div class="label">鸿蒙全量 ${periodLabel} 占华为</div>
+      <div class="label">Next 双框+纯血鸿蒙 ${periodLabel} 占华为</div>
       <div class="value" style="color:#f97316;">${hmAllShare}%</div>
       <div class="delta flat">${pHmAllFmt.val} ${pHmAllFmt.unit} / ${pHwTotalFmt.val} ${pHwTotalFmt.unit}</div>
     </div>`;
@@ -1017,19 +1017,42 @@ function renderHarmony() {
     margin:{t:20, b:60, l:50, r:20}
   }, {responsive:true, displayModeBar:false});
 
-  // 系列累计排行
-  const series = DATA.series.slice().sort((a,b)=>b.total-a.total);
+  // Next 双框系列排行（跟随时间筛选；选全部=累计）
+  const seriesPeriod = DATA.series.map(s => {
+    let units = 0;
+    xs.forEach(m => units += s.byMonth?.[m] || 0);
+    return { ...s, periodUnits: units };
+  }).filter(s => !s.isPure && s.periodUnits > 0).sort((a,b)=>b.periodUnits-a.periodUnits);
   Plotly.newPlot('chartHmSeries', [{
-    x: series.map(s => s.total/10000),
-    y: series.map(s => s.series),
+    x: seriesPeriod.map(s => s.periodUnits/10000),
+    y: seriesPeriod.map(s => s.series),
     type:'bar', orientation:'h',
-    marker:{color: series.map(s => s.isPure ? '#dc2626' : '#fb923c')},
-    text: series.map(s => fmtW(s.total)+'万 '+(s.isPure?'[纯血鸿蒙]':'[Next 双框]')),
+    marker:{color:'#fb923c'},
+    text: seriesPeriod.map(s => fmtW(s.periodUnits)+'万'),
     textposition:'outside', textfont:{size:10}, cliponaxis:false
   }], {
     yaxis:{autorange:'reversed', automargin:true},
-    xaxis:{title:'累计出货 (万台)'},
-    margin:{t:10, b:40, l:120, r:140}
+    xaxis:{title:`${periodLabel} 出货 (万台)`},
+    margin:{t:10, b:40, l:120, r:110}
+  }, {responsive:true, displayModeBar:false});
+
+  // 纯血鸿蒙（单框）按时间周期出货排行
+  const pureRank = DATA.series.map(s => {
+    let units = 0;
+    xs.forEach(m => units += s.byMonth?.[m] || 0);
+    return { ...s, periodUnits: units };
+  }).filter(s => s.isPure && s.periodUnits > 0).sort((a,b)=>b.periodUnits-a.periodUnits);
+  Plotly.newPlot('chartHmPureRank', [{
+    x: pureRank.map(s => s.periodUnits/10000),
+    y: pureRank.map(s => s.series),
+    type:'bar', orientation:'h',
+    marker:{color:'#dc2626'},
+    text: pureRank.map(s => fmtW(s.periodUnits)+'万'),
+    textposition:'outside', textfont:{size:10, color:'#dc2626'}, cliponaxis:false
+  }], {
+    yaxis:{autorange:'reversed', automargin:true},
+    xaxis:{title:`${periodLabel} 出货 (万台)`},
+    margin:{t:10, b:40, l:120, r:120}
   }, {responsive:true, displayModeBar:false});
 }
 
