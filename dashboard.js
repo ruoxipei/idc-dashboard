@@ -1036,12 +1036,12 @@ function renderHarmony() {
     margin:{t:20, b:60, l:50, r:20}
   }, {responsive:true, displayModeBar:false});
 
-  // Next 双框系列排行（跟随时间筛选；选全部=累计）
+  // Next 双框系列 Top10（跟随时间筛选；选全部=累计；不足10个有量系列时用同类累计Top补足）
   const seriesPeriod = DATA.series.map(s => {
     let units = 0;
     xs.forEach(m => units += s.byMonth?.[m] || 0);
     return { ...s, periodUnits: units };
-  }).filter(s => !s.isPure && s.periodUnits > 0).sort((a,b)=>b.periodUnits-a.periodUnits);
+  }).filter(s => !s.isPure).sort((a,b)=>(b.periodUnits-a.periodUnits) || (b.total-a.total)).slice(0, 10);
   Plotly.newPlot('chartHmSeries', [{
     x: seriesPeriod.map(s => s.periodUnits/10000),
     y: seriesPeriod.map(s => s.series),
@@ -1055,23 +1055,27 @@ function renderHarmony() {
     margin:{t:10, b:40, l:120, r:110}
   }, {responsive:true, displayModeBar:false});
 
-  // 纯血鸿蒙（单框）按时间周期出货排行
-  const pureRank = DATA.series.map(s => {
+  // 纯血鸿蒙（单框）机型 Top10（跟随时间筛选；用机型维度保证固定Top10，更适合看当期主力）
+  const pureRank = DATA.models.map(m => {
     let units = 0;
-    xs.forEach(m => units += s.byMonth?.[m] || 0);
-    return { ...s, periodUnits: units };
-  }).filter(s => s.isPure && s.periodUnits > 0).sort((a,b)=>b.periodUnits-a.periodUnits);
+    xs.forEach(mo => units += m.byMonth?.[mo] || 0);
+    const info = DATA.hmMap?.[m.model];
+    return { ...m, hmSeries: info?.series || '', isPure: !!info?.isPure, periodUnits: units };
+  }).filter(m => m.group === '华为' && m.isPure)
+    .sort((a,b)=>(b.periodUnits-a.periodUnits) || (b.total-a.total)).slice(0, 10);
   Plotly.newPlot('chartHmPureRank', [{
-    x: pureRank.map(s => s.periodUnits/10000),
-    y: pureRank.map(s => s.series),
+    x: pureRank.map(m => m.periodUnits/10000),
+    y: pureRank.map(m => m.model),
     type:'bar', orientation:'h',
     marker:{color:'#dc2626'},
-    text: pureRank.map(s => fmtW(s.periodUnits)+'万'),
-    textposition:'outside', textfont:{size:10, color:'#dc2626'}, cliponaxis:false
+    customdata: pureRank.map(m => m.hmSeries || '-'),
+    text: pureRank.map(m => fmtW(m.periodUnits)+'万'),
+    textposition:'outside', textfont:{size:10, color:'#dc2626'}, cliponaxis:false,
+    hovertemplate:'%{y}<br>系列: %{customdata}<br>出货: %{x:.1f}万<extra></extra>'
   }], {
     yaxis:{autorange:'reversed', automargin:true},
     xaxis:{title:`${periodLabel} 出货 (万台)`},
-    margin:{t:10, b:40, l:120, r:120}
+    margin:{t:10, b:40, l:135, r:120}
   }, {responsive:true, displayModeBar:false});
 }
 
