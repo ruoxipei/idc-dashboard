@@ -317,17 +317,19 @@ function renderOverview() {
   }
   const chartPrevXs = chartXs.map(m => shiftMonth(m, -12));
 
-  // 每月各品牌出货
+  // 每月各品牌出货：总览堆叠图自动补「其他品牌」，确保柱顶总量与大卡全市场口径一致
+  const stackBrands = [...STATE.selectedBrands];
+  if (!stackBrands.includes('其他品牌')) stackBrands.push('其他品牌');
   const monthTotals = chartXs.map(m => {
     let s = 0;
-    STATE.selectedBrands.forEach(b => s += DATA.groupMonthly[b]?.[m] || 0);
+    stackBrands.forEach(b => s += DATA.groupMonthly[b]?.[m] || 0);
     return s / 10000; // 万台
   });
   // YoY 数组
   const monthYoy = chartXs.map((m, i) => {
     const prevM = chartPrevXs[i];
     let cur = 0, prev = 0;
-    STATE.selectedBrands.forEach(b => {
+    stackBrands.forEach(b => {
       cur += DATA.groupMonthly[b]?.[m] || 0;
       prev += DATA.groupMonthly[b]?.[prevM] || 0;
     });
@@ -335,7 +337,7 @@ function renderOverview() {
   });
 
   // 每个厂商一组堆叠柱，柱内文本=份额%
-  const stackTraces = STATE.selectedBrands.map(b => {
+  const stackTraces = stackBrands.map(b => {
     const ys = chartXs.map(m => (DATA.groupMonthly[b]?.[m] || 0) / 10000);
     const txts = chartXs.map((m, i) => {
       const total = monthTotals[i];
