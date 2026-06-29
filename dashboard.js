@@ -1016,7 +1016,9 @@ function renderHarmony() {
     { x: hwM, y: pureOld, name:'Next 双框', type:'bar', marker:{color:'#fb923c'} },
     { x: hwM, y: pureAnd, name:'Android', type:'bar', marker:{color:'#94a3b8'} }
   ], {
-    barmode:'stack', yaxis:{title:'万台'},
+    barmode:'stack',
+    xaxis:{type:'category'},
+    yaxis:{title:'万台'},
     legend:{orientation:'h', y:-0.18, font:{size:11}},
     margin:{t:20, b:60, l:55, r:30}
   }, {responsive:true, displayModeBar:false});
@@ -1029,6 +1031,7 @@ function renderHarmony() {
     line:{color:'#dc2626', width:3}, marker:{size:6},
     fill:'tozeroy', fillcolor:'rgba(220,38,38,0.12)'
   }], {
+    xaxis:{type:'category'},
     yaxis:{title:'占比 (%)', ticksuffix:'%', range:[0,100], dtick:20},
     margin:{t:20, b:60, l:50, r:20}
   }, {responsive:true, displayModeBar:false});
@@ -1233,6 +1236,7 @@ function bindEvents() {
 }
 
 function applyPreset(name) {
+  STATE.activePreset = name;
   const months = DATA.meta.months;
   const last = months[months.length-1];
   switch (name) {
