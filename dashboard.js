@@ -628,6 +628,8 @@ function renderBrand() {
 
 // ================== Tab 3: 机型分析 ==================
 function renderModel() {
+  searchModel();
+  renderModelLifecycle();
   renderFlagshipBar();
 }
 
@@ -1183,6 +1185,15 @@ function bindEvents() {
     e.preventDefault(); $('#dropzone').classList.remove('show');
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   });
+
+  // 机型搜索与生命周期
+  $('#modelSearchBtn').onclick = searchModel;
+  $('#modelSearch').addEventListener('keypress', (e) => { if (e.key === 'Enter') searchModel(); });
+  $('#modelClearBtn').onclick = () => {
+    STATE.selectedModels.clear();
+    searchModel();
+    renderModelLifecycle();
+  };
 
   $('#flagshipPairSelect').onchange = (e) => {
     STATE.flagshipPair = e.target.value;
