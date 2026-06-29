@@ -396,30 +396,14 @@ tr:hover { background: #f8fafc; }
 
     <!-- ④ RMB价格带 -->
     <div class="section-anchor" id="sec-rmb-price">
-      <span class="num">4</span> 人民币价格带高端化地图
-      <span class="desc">按美元价×7折算：2k以下 / 2k-4k / 4k-6k / 6k以上，查看结构切片与趋势</span>
+      <span class="num">4</span> 各品牌价格区间分布
+      <span class="desc">按美元价×7折算：2k以下 / 2k-4k / 4k-6k / 6k以上；每个品牌双柱对比当期 vs 去年同期份额</span>
     </div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">当期各品牌人民币价格带分布（按顶部时间筛选合计）
-          <div class="actions"><button onclick="downloadChart('chartRmbPriceBrand', '人民币价格带分布')">📷 PNG</button></div>
-        </div>
-        <div id="chartRmbPriceBrand" class="chart" style="height:360px;"></div>
+    <div class="card">
+      <div class="card-title">各品牌价格区间分布：当期 vs 去年同期（按顶部时间筛选合计）
+        <div class="actions"><button onclick="downloadChart('chartRmbPriceBrand', '各品牌价格区间分布')">📷 PNG</button></div>
       </div>
-      <div class="card">
-        <div class="card-title">价格区间份额 YoY 趋势（pp）
-          <div class="actions">
-            <select id="rmbYoyTierSelect" style="font-size:11px; padding:3px 6px;">
-              <option value="2k以下">&lt;¥2k</option>
-              <option value="2k-4k">¥2k-4k</option>
-              <option value="4k-6k">¥4k-6k</option>
-              <option value="6k以上" selected>¥6k+</option>
-            </select>
-            <button onclick="downloadChart('chartRmbHighTrend', '价格区间YoY趋势')">📷 PNG</button>
-          </div>
-        </div>
-        <div id="chartRmbHighTrend" class="chart" style="height:360px;"></div>
-      </div>
+      <div id="chartRmbPriceBrand" class="chart" style="height:440px;"></div>
     </div>
     <div class="card">
       <div class="card-title">人民币价格带明细表</div>

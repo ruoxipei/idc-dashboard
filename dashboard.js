@@ -8,7 +8,6 @@ let STATE = {
   endMonth: null,           // YYYY-MM
   selectedModels: new Set(),
   priceView: 'market',
-  rmbYoyTier: '6k以上',
   activePreset: null,
   flagshipPair: 'all',
   flagshipMonths: 6
@@ -884,59 +883,49 @@ function renderRmbPriceSection(xs, visibleQs) {
   const brands = STATE.selectedBrands.filter(b => b !== '其他品牌');
   if (!brands.length) return;
   const data = calcRmbTierByBrand(brands, xs);
+  const prevXs = xs.map(m => shiftMonth(m, -12));
+  const prevData = calcRmbTierByBrand(brands, prevXs);
   const totals = brands.map(b => Object.values(data[b] || {}).reduce((s,v)=>s+v,0));
-  const traces = RMB_PRICE_TIERS.map(t => ({
-    x: brands,
-    y: brands.map((b,i) => totals[i] ? (data[b][t.key] / totals[i] * 100) : 0),
-    name: t.label,
-    type: 'bar',
-    marker: { color: t.color },
-    customdata: brands.map(b => data[b][t.key] || 0),
-    text: brands.map((b,i) => {
-      const pct = totals[i] ? (data[b][t.key] / totals[i] * 100) : 0;
-      return pct >= 5 ? pct.toFixed(0) + '%' : '';
-    }),
-    textposition:'inside', textfont:{size:10, color:'#fff'},
-    hovertemplate: '%{x}<br>'+t.label+': %{customdata:,.0f} 台<br>份额 %{y:.1f}%<extra></extra>'
-  }));
+  const prevTotals = brands.map(b => Object.values(prevData[b] || {}).reduce((s,v)=>s+v,0));
+
+  const xBrands = [];
+  const xPeriods = [];
+  brands.forEach(b => {
+    xBrands.push(b, b);
+    xPeriods.push('当期', '去年同期');
+  });
+  const traces = RMB_PRICE_TIERS.map(t => {
+    const ys = [];
+    const cds = [];
+    const txts = [];
+    brands.forEach((b, i) => {
+      const curUnits = data[b][t.key] || 0;
+      const prevUnits = prevData[b]?.[t.key] || 0;
+      const curPct = totals[i] ? curUnits / totals[i] * 100 : 0;
+      const prevPct = prevTotals[i] ? prevUnits / prevTotals[i] * 100 : 0;
+      ys.push(curPct, prevPct);
+      cds.push([curUnits, '当期'], [prevUnits, '去年同期']);
+      txts.push(curPct >= 5 ? curPct.toFixed(0)+'%' : '', prevPct >= 5 ? prevPct.toFixed(0)+'%' : '');
+    });
+    return {
+      x: [xBrands, xPeriods],
+      y: ys,
+      name: t.label,
+      type: 'bar',
+      marker: { color: t.color },
+      customdata: cds,
+      text: txts,
+      textposition:'inside', textfont:{size:10, color:'#fff'},
+      hovertemplate: '%{x}<br>%{customdata[1]} '+t.label+': %{customdata[0]:,.0f} 台<br>份额 %{y:.1f}%<extra></extra>'
+    };
+  });
   Plotly.newPlot('chartRmbPriceBrand', traces, {
     barmode:'stack',
     yaxis:{title:'份额 (%)', ticksuffix:'%', range:[0,100]},
-    xaxis:{type:'category'},
+    xaxis:{type:'multicategory', tickfont:{size:11}},
     legend:{orientation:'h', y:-0.18, font:{size:11}},
-    margin:{t:20, b:70, l:55, r:20}
-  }, {responsive:true, displayModeBar:false});
-
-  const qData = {};
-  const allTrendQs = [...new Set([...visibleQs, ...visibleQs.map(q => `${+q.slice(0,4)-1}${q.slice(4)}`)])];
-  allTrendQs.forEach(q => qData[q] = calcRmbTierByBrand(brands, getQuarterMonths(q).filter(m => DATA.meta.months.includes(m))));
-  const selectedTier = STATE.rmbYoyTier || '6k以上';
-  const selectedTierLabel = RMB_PRICE_TIERS.find(t => t.key === selectedTier)?.label || selectedTier;
-  const tierShare = (q, b, tierKey) => {
-    const d = qData[q]?.[b] || {};
-    const tot = Object.values(d).reduce((s,v)=>s+v,0);
-    return tot ? ((d[tierKey] || 0) / tot * 100) : null;
-  };
-  const trendTraces = brands.map(b => {
-    const ys = visibleQs.map(q => {
-      const prevQ = `${+q.slice(0,4)-1}${q.slice(4)}`;
-      const cur = tierShare(q, b, selectedTier);
-      const prev = tierShare(prevQ, b, selectedTier);
-      return cur == null || prev == null ? null : cur - prev;
-    });
-    return {
-      x: visibleQs, y: ys, name: b, type:'scatter', mode:'lines+markers+text',
-      line:{color:brandColor(b), width:2.5}, marker:{size:7},
-      text: ys.map(v => v == null || Math.abs(v) < 1 ? '' : (v>=0?'+':'') + v.toFixed(1) + 'pp'), textposition:'top center',
-      hovertemplate: '%{x}<br>'+b+' '+selectedTierLabel+' 份额YoY: %{y:+.1f}pp<extra></extra>'
-    };
-  });
-  const yVals = trendTraces.flatMap(t => t.y).filter(v => v != null);
-  const yMax = Math.max(5, ...yVals.map(v => Math.abs(v))) * 1.25;
-  Plotly.newPlot('chartRmbHighTrend', trendTraces, {
-    yaxis:{title:`${selectedTierLabel} 份额 YoY变化 (pp)`, ticksuffix:'pp', range:[-yMax, yMax], zeroline:true, zerolinecolor:'#94a3b8'},
-    legend:{orientation:'h', y:-0.18, font:{size:11}},
-    margin:{t:20, b:70, l:60, r:20}
+    title:{text:`当期：${periodDesc()} ｜ 去年同期：${comparePeriodDesc()}`, font:{size:11, color:'#64748b'}, x:0, xanchor:'left'},
+    margin:{t:45, b:90, l:55, r:20}
   }, {responsive:true, displayModeBar:false});
 
   let html = '<thead><tr><th>品牌</th><th>当期合计(万)</th>';
@@ -1213,12 +1202,7 @@ function bindEvents() {
   };
   $('#priceViewMarket').onclick = () => { STATE.priceView = 'market'; updatePriceViewBtn(); renderPrice(); };
   $('#priceViewBrand').onclick = () => { STATE.priceView = 'brand'; updatePriceViewBtn(); renderPrice(); };
-  $('#rmbYoyTierSelect').onchange = (e) => { STATE.rmbYoyTier = e.target.value; renderPrice(); };
-  setTimeout(() => {
-    updatePriceViewBtn();
-    const tierSel = $('#rmbYoyTierSelect');
-    if (tierSel) tierSel.value = STATE.rmbYoyTier;
-  }, 100);
+  setTimeout(updatePriceViewBtn, 100);
 
   // 新闻 Tab 切换
   $$('#newsRegionGroup .news-toggle').forEach(btn => {
