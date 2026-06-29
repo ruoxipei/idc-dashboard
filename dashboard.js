@@ -9,6 +9,7 @@ let STATE = {
   selectedModels: new Set(),
   priceView: 'market',
   rmbYoyTier: '6k以上',
+  activePreset: null,
   flagshipPair: 'all',
   flagshipMonths: 6
 };
@@ -54,6 +55,15 @@ function getMonthsInRange() {
   const i2 = monthToIdx(STATE.endMonth);
   if (i1 < 0 || i2 < 0) return DATA.meta.months;
   return DATA.meta.months.slice(Math.min(i1,i2), Math.max(i1,i2)+1);
+}
+
+function expandMonthsToMin(xs, minBars) {
+  if (!xs.length || xs.length >= minBars) return xs;
+  const allMonths = DATA.meta.months;
+  const lastIdx = allMonths.indexOf(xs[xs.length - 1]);
+  if (lastIdx < 0) return xs;
+  const startIdx = Math.max(0, lastIdx - minBars + 1);
+  return allMonths.slice(startIdx, lastIdx + 1);
 }
 
 // 对比期：YoY = 起止各回退 12 个月
@@ -329,14 +339,7 @@ function renderOverview() {
   // 默认始终展示至少6个柱子：若筛选区间 <6 个月，往前补齐到6个月
   // 若筛选区间 >=6 个月，则按实际数量展示
   const MIN_BARS = 6;
-  let chartXs = xs;
-  if (xs.length < MIN_BARS) {
-    const lastMonth = xs[xs.length - 1];
-    const allMonths = DATA.meta.months;
-    const lastIdx = allMonths.indexOf(lastMonth);
-    const startIdx = Math.max(0, lastIdx - MIN_BARS + 1);
-    chartXs = allMonths.slice(startIdx, lastIdx + 1);
-  }
+  const chartXs = expandMonthsToMin(xs, MIN_BARS);
   const chartPrevXs = chartXs.map(m => shiftMonth(m, -12));
 
   // 每月各品牌出货：总览堆叠图自动补「其他品牌」，确保柱顶总量与大卡全市场口径一致
@@ -957,9 +960,12 @@ function renderRmbPriceSection(xs, visibleQs) {
 function renderHarmony() {
   // 全量月份（用于"累计"统计）
   const hmDataMonths = Object.keys(DATA.huaweiHM).sort();
-  // 时间筛选范围内、且有华为鸿蒙数据的月份（用于堆叠图/占比折线/当期 KPI）
+  // KPI / 排行按实际时间筛选；月度图在单月/近3月/季度时补足展示月份，避免单柱过丑
   const xs = getMonthsInRange();
-  const hwM = xs.filter(m => DATA.huaweiHM[m]);
+  let chartXs = xs;
+  if (['latest','latest3'].includes(STATE.activePreset)) chartXs = expandMonthsToMin(xs, 6);
+  else if (STATE.activePreset === 'curQ') chartXs = expandMonthsToMin(xs, 5);
+  const hwM = chartXs.filter(m => DATA.huaweiHM[m]);
   const purePure = hwM.map(m => DATA.huaweiHM[m].pure / 10000);
   const pureOld = hwM.map(m => DATA.huaweiHM[m].oldHM / 10000);
   const pureAnd = hwM.map(m => DATA.huaweiHM[m].android / 10000);
@@ -1261,6 +1267,7 @@ function applyPreset(name) {
 }
 
 function setActivePreset(name) {
+  STATE.activePreset = name;
   $$('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === name));
 }
 
