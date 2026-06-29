@@ -7,7 +7,9 @@ let STATE = {
   startMonth: null,         // YYYY-MM, 由数据加载后自动初始化
   endMonth: null,           // YYYY-MM
   selectedModels: new Set(),
-  priceView: 'market'
+  priceView: 'market',
+  flagshipPair: 'all',
+  flagshipMonths: 6
 };
 
 // ================== 工具函数 ==================
@@ -150,6 +152,7 @@ function afterDataLoaded() {
   STATE.endMonth = ms[ms.length-1];
   buildBrandPills();
   buildMonthSelectors();
+  buildFlagshipControls();
   populatePeriodSelect();
   updateComparePeriodLabel();
   setActivePreset('latest6');
@@ -168,6 +171,24 @@ function buildMonthSelectors() {
 
 function updateComparePeriodLabel() {
   $('#comparePeriod').textContent = comparePeriodDesc();
+}
+
+const FLAGSHIP_PAIRS = [
+  { key:'huawei_mate', label:'华为 Mate', cur:'华为 Mate 80 系列', prev:'华为 Mate 70 系列' },
+  { key:'huawei_pura', label:'华为 Pura', cur:'华为 Pura 80 系列', prev:'华为 Pura 70 系列' },
+  { key:'xiaomi_num', label:'小米 数字', cur:'小米 17 系列', prev:'小米 15 系列' },
+  { key:'oppo_findx', label:'OPPO Find X', cur:'OPPO Find X9 系列', prev:'OPPO Find X8 系列' },
+  { key:'vivo_x', label:'vivo X', cur:'vivo X300 系列', prev:'vivo X200 系列' },
+  { key:'honor_magic', label:'荣耀 Magic', cur:'荣耀 Magic 8 系列', prev:'荣耀 Magic 7 系列' }
+];
+
+function buildFlagshipControls() {
+  const pairSel = $('#flagshipPairSelect');
+  if (!pairSel) return;
+  pairSel.innerHTML = '<option value="all">全部系列</option>' + FLAGSHIP_PAIRS.map(p => `<option value="${p.key}">${p.label}：${p.cur.replace(/^.*? /,'')} vs ${p.prev.replace(/^.*? /,'')}</option>`).join('');
+  pairSel.value = STATE.flagshipPair;
+  const monthSel = $('#flagshipMonthsSelect');
+  if (monthSel) monthSel.value = String(STATE.flagshipMonths);
 }
 
 function buildBrandPills() {
@@ -678,50 +699,51 @@ function renderModelLifecycle() {
 }
 
 function renderFlagshipBar() {
-  // 各旗舰 M0~M5 累计
+  const monthsN = Number(STATE.flagshipMonths) || 6;
+  const lcLabel = `M0~M${monthsN - 1}`;
   const items = Object.values(DATA.flagships).map(f => {
     if (!f.byMonth || Object.keys(f.byMonth).length === 0) return null;
     const ms = Object.keys(f.byMonth).sort();
     const launch = ms[0];
     const [yL, mL] = launch.split('-').map(Number);
-    let lc5 = 0;
-    for (let k=0; k<6; k++) {
+    let lcTotal = 0;
+    for (let k=0; k<monthsN; k++) {
       const dt = new Date(yL, mL-1+k, 1);
       const mk = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
-      lc5 += f.byMonth[mk] || 0;
+      lcTotal += f.byMonth[mk] || 0;
     }
-    return { ...f, m05: lc5, launch };
+    return { ...f, lcTotal, launch };
   }).filter(Boolean);
 
-  // 配对：本代 vs 上代（按品牌）
-  const pairs = [
-    ['华为 Mate', '华为 Mate 80 系列', '华为 Mate 70 系列'],
-    ['华为 Pura', '华为 Pura 80 系列', '华为 Pura 70 系列'],
-    ['小米 数字', '小米 17 系列', '小米 15 系列'],
-    ['OPPO Find X', 'OPPO Find X9 系列', 'OPPO Find X8 系列'],
-    ['vivo X', 'vivo X300 系列', 'vivo X200 系列'],
-    ['荣耀 Magic', '荣耀 Magic 8 系列', '荣耀 Magic 7 系列']
-  ];
-  const cats = pairs.map(p => p[0]);
+  const pairs = STATE.flagshipPair === 'all' ? FLAGSHIP_PAIRS : FLAGSHIP_PAIRS.filter(p => p.key === STATE.flagshipPair);
+  $('#flagshipSeriesNote').innerHTML = pairs.map(p => `<b>${p.label}</b>：本代 ${p.cur} vs 上代 ${p.prev}`).join('　｜　');
+  const cats = pairs.map(p => p.label);
   const cur = pairs.map(p => {
-    const it = items.find(i => i.name === p[1]);
-    return it ? it.m05/10000 : 0;
+    const it = items.find(i => i.name === p.cur);
+    return it ? it.lcTotal/10000 : 0;
   });
   const prev = pairs.map(p => {
-    const it = items.find(i => i.name === p[2]);
-    return it ? it.m05/10000 : 0;
+    const it = items.find(i => i.name === p.prev);
+    return it ? it.lcTotal/10000 : 0;
   });
+  const curHover = pairs.map((p,i) => `${p.cur}<br>${lcLabel}: ${cur[i].toFixed(1)}万`);
+  const prevHover = pairs.map((p,i) => `${p.prev}<br>${lcLabel}: ${prev[i].toFixed(1)}万`);
   Plotly.newPlot('chartFlagshipBar', [
-    { x: cats, y: cur, name:'本代 (M0~M5)', type:'bar', marker:{color:'#1e3a8a'},
+    { x: cats, y: cur, name:`本代 (${lcLabel})`, type:'bar', marker:{color:'#1e3a8a'},
+      customdata: curHover,
+      hovertemplate: '%{customdata}<extra></extra>',
       text: cur.map((v,i)=>{
-        const yoy = prev[i] ? ((v/prev[i]-1)*100) : 0;
-        return '<b>'+v.toFixed(0)+'万</b> ('+(yoy>=0?'+':'')+yoy.toFixed(0)+'%)';
+        const yoy = prev[i] ? ((v/prev[i]-1)*100) : null;
+        return '<b>'+v.toFixed(0)+'万</b>' + (yoy == null ? '' : ' ('+(yoy>=0?'+':'')+yoy.toFixed(0)+'%)');
       }), textposition:'outside', textfont:{size:11, color:'#1e3a8a'}, cliponaxis:false },
-    { x: cats, y: prev, name:'上代 (M0~M5)', type:'bar', marker:{color:'#cbd5e1'},
+    { x: cats, y: prev, name:`上代 (${lcLabel})`, type:'bar', marker:{color:'#cbd5e1'},
+      customdata: prevHover,
+      hovertemplate: '%{customdata}<extra></extra>',
       text: prev.map(v=>v.toFixed(0)+'万'), textposition:'outside',
       textfont:{size:10, color:'#64748b'}, cliponaxis:false }
   ], {
     barmode:'group', yaxis:{title:'万台', automargin:true},
+    xaxis:{tickfont:{size:12}},
     legend:{orientation:'h', y:-0.18, font:{size:11}, traceorder:'normal'},
     margin:{t:30, b:60, l:55, r:30}
   }, {responsive:true, displayModeBar:false});
@@ -779,6 +801,8 @@ function renderPrice() {
     margin:{t:20, b:60, l:55, r:30}
   }, {responsive:true, displayModeBar:false});
 
+  renderRmbPriceSection(xs, visibleQs);
+
   // 各厂商 $700+ 高端段份额（当期 vs 去年同期）柱状对比
   const sel = STATE.selectedBrands.filter(b => b !== '其他品牌');
   const lastM = DATA.meta.months[DATA.meta.months.length-1];
@@ -825,6 +849,98 @@ function renderPrice() {
     margin:{t:30, b:60, l:55, r:30},
     bargap:0.3
   }, {responsive:true, displayModeBar:false});
+}
+
+const RMB_PRICE_TIERS = [
+  { key:'2k以下', label:'<¥2k', min:0, max:2000, color:'#cbd5e1' },
+  { key:'2k-4k', label:'¥2k-4k', min:2000, max:4000, color:'#60a5fa' },
+  { key:'4k-6k', label:'¥4k-6k', min:4000, max:6000, color:'#1e3a8a' },
+  { key:'6k以上', label:'¥6k+', min:6000, max:Infinity, color:'#be185d' }
+];
+function rmbTier(priceUSD) {
+  if (priceUSD == null || isNaN(priceUSD)) return null;
+  const rmb = priceUSD * 7;
+  return RMB_PRICE_TIERS.find(t => rmb >= t.min && rmb < t.max)?.key || null;
+}
+function calcRmbTierByBrand(brands, months) {
+  const data = {};
+  brands.forEach(b => {
+    data[b] = {};
+    RMB_PRICE_TIERS.forEach(t => data[b][t.key] = 0);
+  });
+  DATA.models.forEach(model => {
+    if (!brands.includes(model.group)) return;
+    const tier = rmbTier(model.priceUSD);
+    if (!tier) return;
+    let u = 0;
+    months.forEach(m => u += model.byMonth[m] || 0);
+    if (u > 0) data[model.group][tier] += u;
+  });
+  return data;
+}
+function renderRmbPriceSection(xs, visibleQs) {
+  const brands = STATE.selectedBrands.filter(b => b !== '其他品牌');
+  if (!brands.length) return;
+  const data = calcRmbTierByBrand(brands, xs);
+  const totals = brands.map(b => Object.values(data[b] || {}).reduce((s,v)=>s+v,0));
+  const traces = RMB_PRICE_TIERS.map(t => ({
+    x: brands,
+    y: brands.map((b,i) => totals[i] ? (data[b][t.key] / totals[i] * 100) : 0),
+    name: t.label,
+    type: 'bar',
+    marker: { color: t.color },
+    customdata: brands.map(b => data[b][t.key] || 0),
+    text: brands.map((b,i) => {
+      const pct = totals[i] ? (data[b][t.key] / totals[i] * 100) : 0;
+      return pct >= 5 ? pct.toFixed(0) + '%' : '';
+    }),
+    textposition:'inside', textfont:{size:10, color:'#fff'},
+    hovertemplate: '%{x}<br>'+t.label+': %{customdata:,.0f} 台<br>份额 %{y:.1f}%<extra></extra>'
+  }));
+  Plotly.newPlot('chartRmbPriceBrand', traces, {
+    barmode:'stack',
+    yaxis:{title:'份额 (%)', ticksuffix:'%', range:[0,100]},
+    xaxis:{type:'category'},
+    legend:{orientation:'h', y:-0.18, font:{size:11}},
+    margin:{t:20, b:70, l:55, r:20}
+  }, {responsive:true, displayModeBar:false});
+
+  const qData = {};
+  visibleQs.forEach(q => qData[q] = calcRmbTierByBrand(brands, getQuarterMonths(q).filter(m => DATA.meta.months.includes(m))));
+  const trendTraces = brands.map(b => {
+    const ys = visibleQs.map(q => {
+      const d = qData[q][b] || {};
+      const tot = Object.values(d).reduce((s,v)=>s+v,0);
+      return tot ? ((d['6k以上'] || 0) / tot * 100) : 0;
+    });
+    return {
+      x: visibleQs, y: ys, name: b, type:'scatter', mode:'lines+markers+text',
+      line:{color:brandColor(b), width:2.5}, marker:{size:7},
+      text: ys.map(v => v >= 3 ? v.toFixed(0)+'%' : ''), textposition:'top center',
+      hovertemplate: '%{x}<br>'+b+' ¥6k+: %{y:.1f}%<extra></extra>'
+    };
+  });
+  Plotly.newPlot('chartRmbHighTrend', trendTraces, {
+    yaxis:{title:'¥6k+ 份额 (%)', ticksuffix:'%', range:[0, Math.max(20, ...trendTraces.flatMap(t => t.y)) * 1.18]},
+    legend:{orientation:'h', y:-0.18, font:{size:11}},
+    margin:{t:20, b:70, l:55, r:20}
+  }, {responsive:true, displayModeBar:false});
+
+  let html = '<thead><tr><th>品牌</th><th>当期合计(万)</th>';
+  RMB_PRICE_TIERS.forEach(t => html += `<th>${t.label}</th>`);
+  html += '<th>¥6k+份额</th></tr></thead><tbody>';
+  brands.forEach((b,i) => {
+    html += `<tr><td><span style="display:inline-block;width:10px;height:10px;background:${brandColor(b)};border-radius:50%;margin-right:6px;"></span>${b}</td><td>${fmtW(totals[i])}</td>`;
+    RMB_PRICE_TIERS.forEach(t => {
+      const v = data[b][t.key] || 0;
+      const pct = totals[i] ? (v / totals[i] * 100) : 0;
+      html += `<td>${fmtW(v)} <span style="color:#64748b;">(${pct.toFixed(1)}%)</span></td>`;
+    });
+    const highShare = totals[i] ? ((data[b]['6k以上'] || 0) / totals[i] * 100) : 0;
+    html += `<td><b>${highShare.toFixed(1)}%</b></td></tr>`;
+  });
+  html += '</tbody>';
+  $('#rmbPriceTable').innerHTML = html;
 }
 
 // ================== Tab 5: 鸿蒙 ==================
@@ -1040,6 +1156,14 @@ function bindEvents() {
     STATE.selectedModels.clear();
     searchModel();
     renderModelLifecycle();
+  };
+  $('#flagshipPairSelect').onchange = (e) => {
+    STATE.flagshipPair = e.target.value;
+    renderFlagshipBar();
+  };
+  $('#flagshipMonthsSelect').onchange = (e) => {
+    STATE.flagshipMonths = Number(e.target.value) || 6;
+    renderFlagshipBar();
   };
 
   // 价格段视角切换（active 高亮）

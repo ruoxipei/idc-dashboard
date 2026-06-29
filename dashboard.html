@@ -318,7 +318,8 @@ tr:hover { background: #f8fafc; }
       <a href="#sec-trend">① 月度走势</a>
       <a href="#sec-model">② 主力机型</a>
       <a href="#sec-price">③ 价格段结构</a>
-      <a href="#sec-high">④ 高端化趋势</a>
+      <a href="#sec-rmb-price">④ RMB价格带</a>
+      <a href="#sec-high">⑤ 高端化趋势</a>
       <span style="margin-left:auto; font-size:11.5px; color:#64748b;">📌 所有图表跟随顶部「厂商」与「时间范围」筛选</span>
     </div>
 
@@ -346,9 +347,18 @@ tr:hover { background: #f8fafc; }
       <div id="chartBrandTop10" class="chart" style="min-height:200px;"></div>
     </div>
     <div class="card">
-      <div class="card-title">HMOVR 旗舰系列代际对比（M0~M5 累计）
-        <div class="actions"><button onclick="downloadChart('chartFlagshipBar', '旗舰代际')">📷 PNG</button></div>
+      <div class="card-title">HMOVR 旗舰系列代际对比
+        <div class="actions">
+          <select id="flagshipPairSelect" style="font-size:11px; padding:3px 6px;"></select>
+          <select id="flagshipMonthsSelect" style="font-size:11px; padding:3px 6px;">
+            <option value="6">M0~M5</option>
+            <option value="9">M0~M8</option>
+            <option value="12">M0~M11</option>
+          </select>
+          <button onclick="downloadChart('chartFlagshipBar', '旗舰代际')">📷 PNG</button>
+        </div>
       </div>
+      <div id="flagshipSeriesNote" class="note" style="margin-bottom:8px;"></div>
       <div id="chartFlagshipBar" class="chart" style="height:340px;"></div>
     </div>
     <div class="card">
@@ -384,9 +394,33 @@ tr:hover { background: #f8fafc; }
       <div id="chartPriceStack" class="chart" style="height:380px;"></div>
     </div>
 
-    <!-- ④ 高端化趋势 -->
+    <!-- ④ RMB价格带 -->
+    <div class="section-anchor" id="sec-rmb-price">
+      <span class="num">4</span> 人民币价格带高端化地图
+      <span class="desc">按美元价×7折算：2k以下 / 2k-4k / 4k-6k / 6k以上，查看结构切片与趋势</span>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">当期各品牌人民币价格带分布（按顶部时间筛选合计）
+          <div class="actions"><button onclick="downloadChart('chartRmbPriceBrand', '人民币价格带分布')">📷 PNG</button></div>
+        </div>
+        <div id="chartRmbPriceBrand" class="chart" style="height:360px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">6k+ 高端占比季度趋势
+          <div class="actions"><button onclick="downloadChart('chartRmbHighTrend', '6k高端占比趋势')">📷 PNG</button></div>
+        </div>
+        <div id="chartRmbHighTrend" class="chart" style="height:360px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">人民币价格带明细表</div>
+      <div style="overflow-x:auto;"><table id="rmbPriceTable"></table></div>
+    </div>
+
+    <!-- ⑤ 高端化趋势 -->
     <div class="section-anchor" id="sec-high">
-      <span class="num">4</span> 高端化趋势
+      <span class="num">5</span> 高端化趋势
       <span class="desc">$700+ 高端段份额：各厂商当期 vs 去年同期对比</span>
     </div>
     <div class="card">
