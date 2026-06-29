@@ -895,7 +895,7 @@ function renderHarmony() {
     line:{color:'#dc2626', width:3}, marker:{size:6},
     fill:'tozeroy', fillcolor:'rgba(220,38,38,0.12)'
   }], {
-    yaxis:{title:'占比 (%)', ticksuffix:'%', range:[0,90]},
+    yaxis:{title:'占比 (%)', ticksuffix:'%', range:[0,100], dtick:20},
     margin:{t:20, b:60, l:50, r:20}
   }, {responsive:true, displayModeBar:false});
 
