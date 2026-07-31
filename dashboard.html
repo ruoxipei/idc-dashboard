@@ -456,8 +456,28 @@ tr:hover { background: #f8fafc; }
   <!-- ===== Tab 4: 海外 / 全球 ===== -->
   <div class="tab-pane" id="tab-overseas">
     <div class="note" style="background:#fef3c7; border-left-color:#f59e0b; color:#78350f;">
-      ⚠️ <b>数据说明</b>：本 Tab 数据来自 <b>IDC Worldwide Quarterly Mobile Phone Tracker 公开新闻稿</b>，配合 Counterpoint / Omdia 公开报告交叉验证。区域细分为合理估算（误差 ±2pp）。海外 = 全球 - 中国（按厂商倒算，中国数据来自项目内 IDC PRC 文件）。
-      仅 <b>季度粒度</b>（IDC 全球数据无月度公开）。
+      ⚠️ <b>数据说明</b>：本 Tab 采用 <b>IDC 口径</b>（Worldwide Quarterly Mobile Phone Tracker 公开新闻稿），Counterpoint / Omdia 仅用于交叉验证。
+      中国部分为项目内 <b>IDC PRC 月度底稿</b>按季度汇总。海外 = 全球 − 中国。
+      YoY 优先采用 IDC 当期官方公布值（IDC 会回溯修订历史，绝对值相除与官方 YoY 可能有 ±1pp 出入）。
+      仅 <b>季度粒度</b>（IDC 全球数据无月度公开）。<span id="overseasEstNote"></span>
+    </div>
+
+    <!-- 海外期间筛选 -->
+    <div class="filter-bar" style="margin-bottom:14px;">
+      <div class="filter-group">
+        <span class="label">季度：</span>
+        <div id="overseasQuarterBtns" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+      </div>
+      <div class="filter-group">
+        <span class="label">合计：</span>
+        <div id="overseasAggBtns" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+      </div>
+      <div class="filter-group" style="margin-left:auto;">
+        <span class="label">当前：</span>
+        <span id="overseasPeriodLabel" style="font-size:12px; color:#0ea5e9; font-weight:700; padding:3px 10px; background:#eff6ff; border-radius:10px;">--</span>
+        <span style="color:#94a3b8; font-size:11px;">vs</span>
+        <span id="overseasComparePeriod" style="font-size:11px; color:#64748b; font-weight:600; padding:3px 8px; background:#f1f5f9; border-radius:10px;">--</span>
+      </div>
     </div>
 
     <!-- 锚点导航 -->
@@ -473,7 +493,7 @@ tr:hover { background: #f8fafc; }
     <!-- ① 全球大势 -->
     <div class="section-anchor" id="osec-global">
       <span class="num">1</span> 全球出货大势
-      <span class="desc">9 个季度走势 + 全球/中国/海外占比</span>
+      <span class="desc">10 个季度走势 + 全球/中国/海外占比</span>
     </div>
     <div class="kpi-total-row" id="overseasKpiTotal" style="grid-template-columns: 1fr 1fr 1fr;"></div>
     <div class="card">
@@ -486,10 +506,10 @@ tr:hover { background: #f8fafc; }
     <!-- ② TOP 厂商 -->
     <div class="section-anchor" id="osec-vendor">
       <span class="num">2</span> TOP 厂商竞争（全球）
-      <span class="desc">最新季度 8 家 TOP 厂商排名 + 海外表现</span>
+      <span class="desc">所选期间 8 家 TOP 厂商排名 + 海外表现</span>
     </div>
     <div class="card">
-      <div class="card-title">最新季度（26Q1）全球 TOP 厂商排名
+      <div class="card-title"><span class="ov-period">--</span> 全球 TOP 厂商排名
         <div class="actions"><button onclick="downloadTable('overseasTopTbl','TOP厂商')">📊 Excel</button></div>
       </div>
       <div style="overflow-x:auto;"><table id="overseasTopTbl"></table></div>
@@ -498,10 +518,10 @@ tr:hover { background: #f8fafc; }
     <!-- ③ 海外出货拆分 -->
     <div class="section-anchor" id="osec-overseas">
       <span class="num">3</span> 海外出货拆分（全球 - 中国 倒算）
-      <span class="desc">最新季度各厂商海外 vs 国内出货占比</span>
+      <span class="desc">所选期间各厂商海外 vs 国内出货占比</span>
     </div>
     <div class="card">
-      <div class="card-title">最新季度 各厂商 海外 vs 国内出货分布
+      <div class="card-title"><span class="ov-period">--</span> 各厂商 海外 vs 国内出货分布
         <div class="actions"><button onclick="downloadChart('chartOverseasSplit','海外拆分')">📷 PNG</button></div>
       </div>
       <div id="chartOverseasSplit" class="chart" style="height:380px;"></div>
@@ -510,10 +530,10 @@ tr:hover { background: #f8fafc; }
     <!-- ④ 区域格局 -->
     <div class="section-anchor" id="osec-region">
       <span class="num">4</span> 区域市场格局
-      <span class="desc">最新季度各区域 TOP 厂商份额</span>
+      <span class="desc">所选期间各区域 TOP 厂商份额</span>
     </div>
     <div class="card">
-      <div class="card-title">最新季度（26Q1）各区域 TOP 厂商份额（%）
+      <div class="card-title"><span class="ov-period">--</span> 各区域 TOP 厂商份额（%）
         <div class="actions"><button onclick="downloadChart('chartRegionShare','区域TOP厂商')">📷 PNG</button></div>
       </div>
       <div id="chartRegionShare" class="chart" style="height:460px;"></div>
@@ -531,7 +551,7 @@ tr:hover { background: #f8fafc; }
       <div id="chartBrandRegion" class="chart" style="height:420px;"></div>
     </div>
     <div class="card">
-      <div class="card-title">中国主要厂商 海外占比对比（最新季度）
+      <div class="card-title">中国主要厂商 海外占比对比（<span class="ov-period">--</span>）
         <div class="actions"><button onclick="downloadChart('chartChinaGo','海外占比')">📷 PNG</button></div>
       </div>
       <div id="chartChinaGo" class="chart" style="height:340px;"></div>

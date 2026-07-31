@@ -127,11 +127,15 @@ async function loadData(url='data/latest.json') {
 }
 
 let OVERSEAS = null;
+let OVERSEAS_STATE = { period: null };
 async function loadOverseasData() {
   try {
-    const res = await fetch('data/overseas_2026Q1.json?t=' + Date.now());
+    const res = await fetch('data/overseas_2026Q2.json?t=' + Date.now());
     if (!res.ok) return;
     OVERSEAS = await res.json();
+    OVERSEAS_STATE.period = OVERSEAS.meta.defaultPeriod
+      || OVERSEAS.meta.quarters[OVERSEAS.meta.quarters.length - 1];
+    buildOverseasPeriodBtns();
     if (DATA) renderOverseas();
   } catch (e) { console.warn('海外数据加载失败:', e); }
 }
@@ -1289,77 +1293,204 @@ function handleFile(file) {
 }
 
 // ================== Tab 4: 海外 / 全球 ==================
+// ---- 期间定义：单季度 + 半年(H1/H2) + 全年 ----
+function ovPeriodList() {
+  const qs = OVERSEAS.meta.quarters;
+  const has = (q) => qs.includes(q);
+  const quarters = qs.slice().reverse().map(q => ({ key: q, label: q, quarters: [q], type: 'q' }));
+  const aggs = [];
+  const years = [...new Set(qs.map(q => q.slice(0, 2)))].sort().reverse();
+  years.forEach(y => {
+    const h1 = [`${y}Q1`, `${y}Q2`].filter(has);
+    const h2 = [`${y}Q3`, `${y}Q4`].filter(has);
+    if (h1.length === 2) aggs.push({ key: `${y}H1`, label: `${y}H1`, quarters: h1, type: 'h' });
+    if (h2.length === 2) aggs.push({ key: `${y}H2`, label: `${y}H2`, quarters: h2, type: 'h' });
+    if (h1.length + h2.length === 4) aggs.push({ key: `${y}FY`, label: `20${y}全年`, quarters: [...h1, ...h2], type: 'y' });
+  });
+  return { quarters, aggs, all: [...quarters, ...aggs] };
+}
+function ovFindPeriod(key) {
+  const list = ovPeriodList().all;
+  return list.find(p => p.key === key) || list[0];
+}
+// 同比对应期间：所含季度年份各回退 1 年
+function ovPrevQuarters(quarters) {
+  return quarters.map(q => `${String(+q.slice(0, 2) - 1).padStart(2, '0')}${q.slice(2)}`);
+}
+function ovPrevLabel(period) {
+  const pq = ovPrevQuarters(period.quarters);
+  if (period.type === 'q') return pq[0];
+  const y = pq[0].slice(0, 2);
+  if (period.type === 'y') return `20${y}全年`;
+  return `${y}${period.key.slice(2)}`;
+}
+// 期间聚合：出货量可加总
+function ovAgg(quarters) {
+  const O = OVERSEAS;
+  const valid = quarters.filter(q => O.globalQuarterly[q]);
+  const sum = (obj) => valid.reduce((s, q) => s + (obj?.[q] || 0), 0);
+  const res = { quarters: valid, ok: valid.length > 0, total: 0, china: 0, brand: {}, brandCn: {}, region: {} };
+  valid.forEach(q => { res.total += O.globalQuarterly[q].total; res.china += O.globalQuarterly[q].china; });
+  O.meta.brandOrder.forEach(b => {
+    res.brand[b] = sum(O.brandQuarterly[b]);
+    res.brandCn[b] = sum(O.brandChinaQuarterly[b]);
+  });
+  O.meta.regionOrder.forEach(r => { res.region[r] = sum(O.regionQuarterlyTotal[r]); });
+  return res;
+}
+// 全球 YoY：单季度优先用 IDC 官方值，多季度按合计计算
+function ovGlobalYoY(period, cur, prev) {
+  if (period.type === 'q') {
+    const g = OVERSEAS.globalQuarterly[period.quarters[0]];
+    if (g && g.yoy != null) return g.yoy;
+  }
+  return prev.total ? (cur.total / prev.total - 1) * 100 : null;
+}
+// 厂商 YoY：单季度优先用 IDC 官方公布值
+function ovBrandYoY(period, brand, cur, prev) {
+  if (period.type === 'q') {
+    const v = OVERSEAS.brandQuarterlyYoyOfficial?.[brand]?.[period.quarters[0]];
+    if (v != null) return { val: v, official: true };
+  }
+  const val = prev ? (cur / prev - 1) * 100 : null;
+  return { val, official: false };
+}
+// 区域份额：多季度按该区域出货量加权平均；缺失季度回退到最近可用季度
+function ovShareByPeriod(mapObj, quarters, weightFn) {
+  const O = OVERSEAS;
+  const keys = Object.keys(mapObj || {}).sort();
+  if (!keys.length) return {};
+  const pick = (q) => mapObj[q] || mapObj[keys.filter(k => k <= q).pop() || keys[keys.length - 1]];
+  const acc = {}, wSum = {};
+  quarters.forEach(q => {
+    const snap = pick(q);
+    if (!snap) return;
+    Object.entries(snap).forEach(([outer, inner]) => {
+      const w = weightFn(outer, q) || 1;
+      acc[outer] = acc[outer] || {};
+      wSum[outer] = (wSum[outer] || 0) + w;
+      Object.entries(inner).forEach(([k, v]) => { acc[outer][k] = (acc[outer][k] || 0) + v * w; });
+    });
+  });
+  const out = {};
+  Object.keys(acc).forEach(outer => {
+    out[outer] = {};
+    const w = wSum[outer] || 1;
+    Object.entries(acc[outer]).forEach(([k, v]) => { out[outer][k] = v / w; });
+  });
+  return out;
+}
+
+function buildOverseasPeriodBtns() {
+  if (!OVERSEAS) return;
+  const { quarters, aggs } = ovPeriodList();
+  const render = (el, list) => {
+    if (!el) return;
+    el.innerHTML = list.map(p =>
+      `<button class="ghost preset-btn ov-period-btn" data-ovperiod="${p.key}">${p.label}</button>`
+    ).join('');
+  };
+  render($('#overseasQuarterBtns'), quarters);
+  render($('#overseasAggBtns'), aggs);
+  $$('.ov-period-btn').forEach(btn => btn.onclick = () => {
+    OVERSEAS_STATE.period = btn.dataset.ovperiod;
+    renderOverseas();
+  });
+  const est = $('#overseasEstNote');
+  if (est && OVERSEAS.meta.estimateNote) {
+    est.innerHTML = `<br>ℹ️ ${OVERSEAS.meta.estimateNote}`;
+  }
+}
+
 function renderOverseas() {
   if (!OVERSEAS) return;
   const O = OVERSEAS;
   const qs = O.meta.quarters;
-  const lastQ = qs[qs.length-1];
-  const prevYQ = qs[qs.length-5] || qs[0]; // 上一年同期
   const brands = O.meta.brandOrder;
   const regions = O.meta.regionOrder;
   const bColor = (b) => O.meta.brandColors[b] || '#94a3b8';
   const rColor = (r) => O.meta.regionColors[r] || '#94a3b8';
 
+  const period = ovFindPeriod(OVERSEAS_STATE.period);
+  OVERSEAS_STATE.period = period.key;
+  const prevQs = ovPrevQuarters(period.quarters);
+  const cur = ovAgg(period.quarters);
+  const prev = ovAgg(prevQs);
+  const pLabel = period.label;
+  const prevLabel = ovPrevLabel(period);
+
+  // 按钮高亮 + 期间标签
+  $$('.ov-period-btn').forEach(b => b.classList.toggle('active', b.dataset.ovperiod === period.key));
+  if ($('#overseasPeriodLabel')) $('#overseasPeriodLabel').textContent = pLabel;
+  if ($('#overseasComparePeriod')) $('#overseasComparePeriod').textContent = prev.ok ? prevLabel : '无同期数据';
+  $$('.ov-period').forEach(el => el.textContent = pLabel);
+
   // ===== KPI 三大卡 =====
-  const lastG = O.globalQuarterly[lastQ];
-  const overseasLast = lastG.total - lastG.china;
-  const prevG = O.globalQuarterly[prevYQ];
-  const overseasPrev = prevG.total - prevG.china;
-  const overseasYoY = ((overseasLast/overseasPrev - 1) * 100);
-  const chinaYoY = ((lastG.china/prevG.china - 1) * 100);
+  const overseasCur = cur.total - cur.china;
+  const overseasPrev = prev.total - prev.china;
+  const globalYoY = ovGlobalYoY(period, cur, prev);
+  const overseasYoY = overseasPrev ? ((overseasCur / overseasPrev - 1) * 100) : null;
+  const chinaYoY = prev.china ? ((cur.china / prev.china - 1) * 100) : null;
+  const fmtYoY = (v) => v == null ? '-' : `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
+  const clsYoY = (v) => v == null ? '' : (v >= 0 ? 'pos-w' : 'neg-w');
+  const periodSub = period.type === 'q' ? pLabel : `${pLabel}（${period.quarters.join(' + ')}）`;
 
   $('#overseasKpiTotal').innerHTML = `
     <div class="kpi-total" style="background:linear-gradient(135deg,#1e3a8a,#3730a3);">
       <div class="left">
         <div>
           <div class="label-big">🌐 全球总出货</div>
-          <div class="value-big">${lastG.total.toFixed(1)} <span class="unit">M</span></div>
+          <div class="value-big">${cur.total.toFixed(1)} <span class="unit">M</span></div>
         </div>
-        <div style="font-size:11.5px; opacity:0.85;">${lastQ}</div>
+        <div style="font-size:11.5px; opacity:0.85;">${periodSub}</div>
       </div>
       <div class="compare">
-        <div class="item">同期: <b>${prevG.total.toFixed(1)}M</b></div>
-        <div class="item">YoY: <b class="${lastG.yoy>=0?'pos-w':'neg-w'}">${lastG.yoy>=0?'+':''}${lastG.yoy.toFixed(1)}%</b></div>
+        <div class="item">${prevLabel}: <b>${prev.ok ? prev.total.toFixed(1) + 'M' : '-'}</b></div>
+        <div class="item">YoY: <b class="${clsYoY(globalYoY)}">${fmtYoY(globalYoY)}</b></div>
       </div>
     </div>
     <div class="kpi-total" style="background:linear-gradient(135deg,#0e7490,#0891b2);">
       <div class="left">
         <div>
           <div class="label-big">🌍 海外出货 (全球-中国)</div>
-          <div class="value-big">${overseasLast.toFixed(1)} <span class="unit">M</span></div>
+          <div class="value-big">${overseasCur.toFixed(1)} <span class="unit">M</span></div>
         </div>
-        <div style="font-size:11.5px; opacity:0.85;">占全球 ${(overseasLast/lastG.total*100).toFixed(1)}%</div>
+        <div style="font-size:11.5px; opacity:0.85;">占全球 ${(overseasCur / cur.total * 100).toFixed(1)}%</div>
       </div>
       <div class="compare">
-        <div class="item">同期: <b>${overseasPrev.toFixed(1)}M</b></div>
-        <div class="item">YoY: <b class="${overseasYoY>=0?'pos-w':'neg-w'}">${overseasYoY>=0?'+':''}${overseasYoY.toFixed(1)}%</b></div>
+        <div class="item">${prevLabel}: <b>${prev.ok ? overseasPrev.toFixed(1) + 'M' : '-'}</b></div>
+        <div class="item">YoY: <b class="${clsYoY(overseasYoY)}">${fmtYoY(overseasYoY)}</b></div>
       </div>
     </div>
     <div class="kpi-total" style="background:linear-gradient(135deg,#c8102e,#9f1239);">
       <div class="left">
         <div>
           <div class="label-big">🇨🇳 中国出货</div>
-          <div class="value-big">${lastG.china.toFixed(1)} <span class="unit">M</span></div>
+          <div class="value-big">${cur.china.toFixed(1)} <span class="unit">M</span></div>
         </div>
-        <div style="font-size:11.5px; opacity:0.85;">占全球 ${(lastG.china/lastG.total*100).toFixed(1)}%</div>
+        <div style="font-size:11.5px; opacity:0.85;">占全球 ${(cur.china / cur.total * 100).toFixed(1)}%</div>
       </div>
       <div class="compare">
-        <div class="item">同期: <b>${prevG.china.toFixed(1)}M</b></div>
-        <div class="item">YoY: <b class="${chinaYoY>=0?'pos-w':'neg-w'}">${chinaYoY>=0?'+':''}${chinaYoY.toFixed(1)}%</b></div>
+        <div class="item">${prevLabel}: <b>${prev.ok ? prev.china.toFixed(1) + 'M' : '-'}</b></div>
+        <div class="item">YoY: <b class="${clsYoY(chinaYoY)}">${fmtYoY(chinaYoY)}</b></div>
       </div>
     </div>
   `;
 
-  // ===== ① 全球走势：中国 vs 海外 堆叠 + YoY 折线 =====
+  // ===== ① 全球走势：中国 vs 海外 堆叠 + YoY 折线（全序列，高亮所选期间）=====
   const totalArr = qs.map(q => O.globalQuarterly[q].total);
   const chinaArr = qs.map(q => O.globalQuarterly[q].china);
   const overseasArr = qs.map(q => O.globalQuarterly[q].total - O.globalQuarterly[q].china);
   const yoyArr = qs.map(q => O.globalQuarterly[q].yoy);
+  const inPeriod = qs.map(q => period.quarters.includes(q));
+  const lineOf = (sel) => sel ? { color: '#facc15', width: 2.5 } : { color: 'rgba(0,0,0,0)', width: 0 };
 
   Plotly.newPlot('chartGlobalTrend', [
-    { x: qs, y: overseasArr, name:'海外', type:'bar', marker:{color:'#0891b2'},
+    { x: qs, y: overseasArr, name:'海外', type:'bar',
+      marker:{ color:'#0891b2', line: { color: inPeriod.map(s => lineOf(s).color), width: inPeriod.map(s => lineOf(s).width) } },
       text: overseasArr.map(v=>v.toFixed(0)), textposition:'inside', textfont:{size:10,color:'#fff'}, yaxis:'y' },
-    { x: qs, y: chinaArr, name:'中国', type:'bar', marker:{color:'#c8102e'},
+    { x: qs, y: chinaArr, name:'中国', type:'bar',
+      marker:{ color:'#c8102e', line: { color: inPeriod.map(s => lineOf(s).color), width: inPeriod.map(s => lineOf(s).width) } },
       text: chinaArr.map(v=>v.toFixed(0)), textposition:'inside', textfont:{size:10,color:'#fff'}, yaxis:'y' },
     { x: qs, y: totalArr.map(v=>v.toFixed(0)), text: totalArr.map(v=>Math.round(v)+'M'), mode:'text',
       type:'scatter', textposition:'top center', textfont:{size:11,color:'#1e3a8a',weight:700},
@@ -1375,58 +1506,71 @@ function renderOverseas() {
       ticksuffix:'%', showgrid:false, zeroline:true, zerolinecolor:'#cbd5e1', tickfont:{size:9,color:'#0ea5e9'}},
     xaxis:{type:'category'},
     legend:{orientation:'h', y:-0.18, font:{size:11}},
-    margin:{t:30, b:60, l:55, r:30}, bargap:0.4
+    title:{ text:`黄框 = 当前所选期间：${pLabel}`, font:{size:11, color:'#64748b'}, x:0, xanchor:'left' },
+    margin:{t:40, b:60, l:55, r:30}, bargap:0.4
   }, {responsive:true, displayModeBar:false});
 
   // ===== ② TOP 厂商表（含全球+海外双 YoY）=====
-  const totLast = lastG.total;
   const ranking = brands.map(b => {
-    const cur = O.brandQuarterly[b][lastQ] || 0;
-    const prev = O.brandQuarterly[b][prevYQ] || 0;
-    const yoy = prev ? ((cur/prev-1)*100) : null;
-    const share = (cur/totLast*100);
-    // 海外 = 全球 - 中国
-    const curOv = Math.max(0, cur - (O.brandChinaQuarterly[b][lastQ]||0));
-    const prevOv = Math.max(0, prev - (O.brandChinaQuarterly[b][prevYQ]||0));
-    const ovYoy = prevOv ? ((curOv/prevOv-1)*100) : null;
-    return {b, cur, prev, yoy, share, curOv, prevOv, ovYoy};
-  }).sort((a,c) => c.cur - a.cur);
+    const c = cur.brand[b] || 0;
+    const p = prev.brand[b] || 0;
+    const yoyInfo = ovBrandYoY(period, b, c, p);
+    const share = cur.total ? (c / cur.total * 100) : 0;
+    const curOv = Math.max(0, c - (cur.brandCn[b] || 0));
+    const prevOv = Math.max(0, p - (prev.brandCn[b] || 0));
+    const ovYoy = prevOv ? ((curOv / prevOv - 1) * 100) : null;
+    return { b, cur: c, prev: p, yoy: yoyInfo.val, official: yoyInfo.official, share, curOv, prevOv, ovYoy };
+  }).sort((a, c) => c.cur - a.cur);
 
   let topHtml = `<thead><tr>
     <th style="text-align:center;">排名</th>
     <th style="text-align:left;">厂商</th>
-    <th style="text-align:center;">${lastQ} 全球出货 (M)</th>
+    <th style="text-align:center;">${pLabel} 全球出货 (M)</th>
     <th style="text-align:center;">份额</th>
-    <th style="text-align:center;">${prevYQ} 同期</th>
+    <th style="text-align:center;">${prevLabel} 同期</th>
     <th style="text-align:center;">全球 YoY</th>
-    <th style="text-align:center;">${lastQ} 海外出货 (M)</th>
+    <th style="text-align:center;">${pLabel} 海外出货 (M)</th>
     <th style="text-align:center;">海外 YoY</th>
   </tr></thead><tbody>`;
   ranking.forEach((r, i) => {
-    // 高亮行：荣耀(大涨)绿底加粗、小米(大跌)红底加粗
     let rowStyle = '';
-    if (r.b === 'Honor') rowStyle = 'background:#ecfdf5; font-weight:700;';
-    else if (r.b === 'Xiaomi') rowStyle = 'background:#fef2f2; font-weight:700;';
-    // 海外出货数字按海外 YoY 染色（升绿降红）
+    if (r.yoy != null && r.yoy >= 15) rowStyle = 'background:#ecfdf5; font-weight:700;';
+    else if (r.yoy != null && r.yoy <= -15) rowStyle = 'background:#fef2f2; font-weight:700;';
     const ovCls = r.ovYoy == null ? '' : (r.ovYoy >= 0 ? 'pos' : 'neg');
+    const mark = r.official ? '<span title="IDC 官方公布值" style="color:#0ea5e9;">*</span>' : '';
     topHtml += `<tr style="${rowStyle}">
       <td style="text-align:center;">#${i+1}</td>
       <td style="text-align:left;"><span style="display:inline-block;width:10px;height:10px;background:${bColor(r.b)};border-radius:50%;margin-right:6px;vertical-align:middle;"></span>${r.b}</td>
       <td style="text-align:center;"><b>${r.cur.toFixed(1)}</b></td>
       <td style="text-align:center;">${r.share.toFixed(1)}%</td>
-      <td style="text-align:center;">${r.prev.toFixed(1)}</td>
-      <td style="text-align:center;" class="${r.yoy>=0?'pos':'neg'}">${r.yoy==null?'-':((r.yoy>=0?'+':'')+r.yoy.toFixed(1)+'%')}</td>
+      <td style="text-align:center;">${r.prev ? r.prev.toFixed(1) : '-'}</td>
+      <td style="text-align:center;" class="${r.yoy==null?'':(r.yoy>=0?'pos':'neg')}">${r.yoy==null?'-':((r.yoy>=0?'+':'')+r.yoy.toFixed(1)+'%'+mark)}</td>
       <td style="text-align:center;"><b>${r.curOv.toFixed(1)}</b></td>
       <td style="text-align:center;" class="${ovCls}">${r.ovYoy==null?'-':((r.ovYoy>=0?'+':'')+r.ovYoy.toFixed(1)+'%')}</td>
     </tr>`;
   });
-  topHtml += '</tbody>';
+  const totOv = cur.total - cur.china;
+  const totOvPrev = prev.total - prev.china;
+  topHtml += `<tr style="background:#f1f5f9; font-weight:700;">
+    <td style="text-align:center;">—</td>
+    <td style="text-align:left;">全球合计</td>
+    <td style="text-align:center;">${cur.total.toFixed(1)}</td>
+    <td style="text-align:center;">100.0%</td>
+    <td style="text-align:center;">${prev.ok ? prev.total.toFixed(1) : '-'}</td>
+    <td style="text-align:center;" class="${globalYoY==null?'':(globalYoY>=0?'pos':'neg')}">${fmtYoY(globalYoY)}</td>
+    <td style="text-align:center;">${totOv.toFixed(1)}</td>
+    <td style="text-align:center;" class="${overseasYoY==null?'':(overseasYoY>=0?'pos':'neg')}">${fmtYoY(overseasYoY)}</td>
+  </tr>`;
+  topHtml += `</tbody><tfoot><tr><td colspan="8" style="text-align:left; font-size:11px; color:#64748b; font-weight:400;">
+    <span style="color:#0ea5e9;">*</span> = IDC 官方公布的当期 YoY（其余为按出货量计算）；合计行为全球全量口径。
+    ${totOvPrev ? '' : ''}
+  </td></tr></tfoot>`;
   $('#overseasTopTbl').innerHTML = topHtml;
 
-  // ===== ③ 海外拆分（最新季度 各厂商 海外 vs 中国）=====
+  // ===== ③ 海外拆分（所选期间 各厂商 海外 vs 中国）=====
   const splitData = brands.map(b => {
-    const total = O.brandQuarterly[b][lastQ] || 0;
-    const china = O.brandChinaQuarterly[b][lastQ] || 0;
+    const total = cur.brand[b] || 0;
+    const china = cur.brandCn[b] || 0;
     const overseas = Math.max(0, total - china);
     return {b, total, china, overseas, ovRate: total ? overseas/total*100 : 0};
   }).sort((a,c) => c.total - a.total);
@@ -1442,12 +1586,15 @@ function renderOverseas() {
       textposition:'inside', textfont:{size:10,color:'#fff'} }
   ], {
     barmode:'stack',
-    yaxis:{title:lastQ+' 出货 (M)', automargin:true},
+    yaxis:{title:pLabel+' 出货 (M)', automargin:true},
+    xaxis:{type:'category'},
     legend:{orientation:'h', y:-0.18, font:{size:11}},
     margin:{t:20, b:60, l:55, r:30}, bargap:0.3
   }, {responsive:true, displayModeBar:false});
 
   // ===== ④ 各区域 TOP 厂商 — 多子图水平柱 =====
+  const regionShare = ovShareByPeriod(O.regionBrandShare, period.quarters,
+    (r, q) => O.regionQuarterlyTotal[r]?.[q] || 0);
   const N = regions.length;
   const xGap = 0.04;
   const xSlot = (1 - xGap*(N-1)) / N;
@@ -1455,7 +1602,7 @@ function renderOverseas() {
   const regionAnn = [];
   regions.forEach((r, idx) => {
     const xL = idx*(xSlot+xGap);
-    const shares = O.regionBrandShare26Q1[r];
+    const shares = regionShare[r] || {};
     const arr = Object.entries(shares).sort((a,b)=>b[1]-a[1]).slice(0,6);
     const i = idx+1;
     const xKey = idx===0?'x':'x'+i, yKey = idx===0?'y':'y'+i;
@@ -1467,6 +1614,7 @@ function renderOverseas() {
       text: arr.map(e=>e[1].toFixed(0)+'%'),
       textposition:'inside', insidetextanchor:'end',
       textfont:{size:10,color:'#fff'},
+      hovertemplate:'%{y} 在 '+r+'：%{x:.1f}%<extra></extra>',
       xaxis: xKey, yaxis: yKey, showlegend: false
     });
     regionAnn.push({
@@ -1485,13 +1633,15 @@ function renderOverseas() {
   Plotly.newPlot('chartRegionShare', regionTraces2, layoutR, {responsive:true, displayModeBar:false});
 
   // ===== ⑤ 品牌×区域 热力图 =====
-  const z = brands.map(b => regions.map(r => (O.brandRegionShare26Q1[b]||{})[r] || 0));
+  const brandRegion = ovShareByPeriod(O.brandRegionShare, period.quarters,
+    (b, q) => O.brandQuarterly[b]?.[q] || 0);
+  const z = brands.map(b => regions.map(r => (brandRegion[b]||{})[r] || 0));
   Plotly.newPlot('chartBrandRegion', [{
     z: z, x: regions, y: brands, type:'heatmap',
     colorscale:[[0,'#f8fafc'],[0.3,'#bfdbfe'],[0.6,'#3b82f6'],[1,'#1e3a8a']],
     text: z.map(row => row.map(v => v>0 ? v.toFixed(0)+'%' : '')),
     texttemplate:'%{text}', textfont:{size:11},
-    hovertemplate:'%{y} 在 %{x}: %{z}%<extra></extra>',
+    hovertemplate:'%{y} 在 %{x}: %{z:.1f}%<extra></extra>',
     colorbar:{title:'份额 %', tickfont:{size:9}}
   }], {
     margin:{t:20,b:60,l:80,r:30},
@@ -1501,8 +1651,8 @@ function renderOverseas() {
   // ===== ⑤ 中国厂商海外占比柱状对比 =====
   const cnBrands = ['Huawei','Honor','Xiaomi','OPPO','vivo','Transsion'];
   const cnData = cnBrands.map(b => {
-    const total = O.brandQuarterly[b][lastQ] || 0;
-    const china = O.brandChinaQuarterly[b][lastQ] || 0;
+    const total = cur.brand[b] || 0;
+    const china = cur.brandCn[b] || 0;
     const overseas = Math.max(0, total - china);
     return { b, total, overseasRate: total ? overseas/total*100 : 0, overseas };
   }).sort((a,c) => c.overseasRate - a.overseasRate);
@@ -1516,7 +1666,7 @@ function renderOverseas() {
     textposition:'outside', textfont:{size:11,color:'#1e293b',weight:700}, cliponaxis:false
   }], {
     yaxis:{title:'海外出货占比 (%)', ticksuffix:'%', range:[0, 110], automargin:true},
-    xaxis:{tickfont:{size:12}},
+    xaxis:{tickfont:{size:12}, type:'category'},
     margin:{t:30, b:50, l:55, r:30}, bargap:0.4
   }, {responsive:true, displayModeBar:false});
 }
