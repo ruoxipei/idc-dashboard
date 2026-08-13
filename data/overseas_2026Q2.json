@@ -1,11 +1,11 @@
 {
   "meta": {
     "period": "2026Q2",
-    "lastUpdated": "2026-07-30",
-    "source": "IDC Worldwide Quarterly Mobile Phone Tracker（主口径，公开新闻稿）+ IDC PRC 月度底稿（中国部分）；Counterpoint / Omdia 仅用于交叉验证",
+    "lastUpdated": "2026-08-13",
+    "source": "IDC Worldwide Quarterly Mobile Phone Tracker 公开季度表（全球）+ 用户确认准确的中国季度底稿（国内）；公开新闻仅补充未披露厂商",
     "caliber": "IDC",
-    "note": "本 Tab 已切换为 IDC 主口径。全球总量与 Top5 厂商出货/份额/YoY 均取 IDC 官方公开值；YoY 直接采用 IDC 当期公布值（IDC 会回溯修订历史，故「绝对值相除」与官方 YoY 可能有 ±1pp 出入，属正常）。中国部分为项目内 IDC PRC 月度底稿按季度汇总（26Q2 = 65.9M，IDC 官方公布 6601 万，一致）。",
-    "estimateNote": "IDC 未公开绝对值的厂商（Honor / Huawei / Transsion）按 IDC 公布增速 + IDC PRC 中国实际数据交叉估算：Huawei = 中国实际 + 海外估算（26Q2 推得 +6.1%，与 Counterpoint 公布 +6% 吻合）。OPPO 自 26Q1 起 IDC 口径已并入 realme，与 24-25 年历史不完全可比，但 YoY 采用 IDC 同口径重算值。24Q3-25Q4 部分季度厂商值取公开报道/份额反推。区域细分为合理估算（误差 ±2pp）。",
+    "note": "海外不是 IDC 直接公开字段，而是严格按「海外推算值 = IDC/公开信息全球出货量 − 用户确认准确的中国出货量」计算。IDC 会回溯修订历史，本表优先采用 2026 年公开表中重列的 25Q1/25Q2 对比值；海外 YoY 均由倒减结果计算。",
+    "estimateNote": "三星、苹果、小米、vivo 及多数 OPPO/传音季度取 IDC 官方公开表；IDC 未公开绝对值的 Honor / Huawei / Transsion 季度标为估算。Honor 26Q1 按 IDC 公布全球 +24.9% 反推；Huawei 26Q2 按 IDC 公布全球 +20.9% 反推。OPPO 自 26Q1 起 IDC 并入 realme，25Q1/25Q2 已按 IDC 2026 表重列，25Q3/25Q4 公开值仍为旧口径，存在口径断点。",
     "quarters": ["24Q1","24Q2","24Q3","24Q4","25Q1","25Q2","25Q3","25Q4","26Q1","26Q2"],
     "defaultPeriod": "26Q2",
     "brandOrder": ["Apple","Samsung","Xiaomi","Honor","vivo","OPPO","Huawei","Transsion"],
@@ -36,23 +36,23 @@
     "24Q2": { "total": 292.2, "china": 71.8, "yoy":  6.5, "official": true },
     "24Q3": { "total": 316.1, "china": 68.8, "yoy":  4.0, "official": true },
     "24Q4": { "total": 331.7, "china": 76.4, "yoy":  2.4, "official": true },
-    "25Q1": { "total": 304.9, "china": 71.4, "yoy":  1.5, "official": true },
-    "25Q2": { "total": 295.2, "china": 69.0, "yoy":  1.0, "official": true },
-    "25Q3": { "total": 322.7, "china": 68.5, "yoy":  2.6, "official": true },
-    "25Q4": { "total": 336.3, "china": 75.7, "yoy":  1.4, "official": false },
-    "26Q1": { "total": 289.7, "china": 68.4, "yoy": -4.1, "official": true },
+    "25Q1": { "total": 302.6, "china": 71.4, "yoy":  1.5, "official": true },
+    "25Q2": { "total": 297.4, "china": 69.0, "yoy":  1.0, "official": true },
+    "25Q3": { "total": 325.7, "china": 68.5, "yoy":  3.5, "official": true },
+    "25Q4": { "total": 336.3, "china": 75.7, "yoy":  2.3, "official": true },
+    "26Q1": { "total": 293.8, "china": 68.4, "yoy": -2.9, "official": true },
     "26Q2": { "total": 277.5, "china": 65.9, "yoy": -6.7, "official": true }
   },
 
   "brandQuarterly": {
-    "Apple":     { "24Q1": 50.1, "24Q2": 45.7, "24Q3": 56.0, "24Q4": 76.9, "25Q1": 57.9, "25Q2": 46.4, "25Q3": 58.6, "25Q4": 76.9, "26Q1": 61.1, "26Q2": 55.8 },
-    "Samsung":   { "24Q1": 60.1, "24Q2": 53.8, "24Q3": 57.5, "24Q4": 51.7, "25Q1": 60.6, "25Q2": 58.0, "25Q3": 61.4, "25Q4": 51.7, "26Q1": 62.8, "26Q2": 62.7 },
-    "Xiaomi":    { "24Q1": 40.8, "24Q2": 42.3, "24Q3": 42.8, "24Q4": 42.7, "25Q1": 41.8, "25Q2": 42.5, "25Q3": 43.3, "25Q4": 42.8, "26Q1": 33.8, "26Q2": 31.2 },
-    "Honor":     { "24Q1": 14.0, "24Q2": 13.5, "24Q3": 13.0, "24Q4": 13.5, "25Q1": 16.2, "25Q2": 17.0, "25Q3": 17.5, "25Q4": 17.0, "26Q1": 20.3, "26Q2": 19.5 },
-    "vivo":      { "24Q1": 22.7, "24Q2": 25.9, "24Q3": 26.0, "24Q4": 22.8, "25Q1": 22.7, "25Q2": 27.1, "25Q3": 27.0, "25Q4": 23.6, "26Q1": 21.2, "26Q2": 21.2 },
-    "OPPO":      { "24Q1": 25.2, "24Q2": 28.2, "24Q3": 26.0, "24Q4": 24.2, "25Q1": 23.5, "25Q2": 25.0, "25Q3": 26.5, "25Q4": 26.2, "26Q1": 30.7, "26Q2": 28.8 },
-    "Huawei":    { "24Q1": 14.9, "24Q2": 16.2, "24Q3": 13.8, "24Q4": 15.6, "25Q1": 16.4, "25Q2": 16.3, "25Q3": 14.3, "25Q4": 14.6, "26Q1": 16.5, "26Q2": 17.3 },
-    "Transsion": { "24Q1": 28.5, "24Q2": 25.5, "24Q3": 27.5, "24Q4": 25.4, "25Q1": 25.0, "25Q2": 25.1, "25Q3": 26.7, "25Q4": 25.0, "26Q1": 19.5, "26Q2": 18.5 }
+    "Apple":     { "24Q1": 52.6, "24Q2": 45.7, "24Q3": 57.1, "24Q4": 77.5, "25Q1": 59.1, "25Q2": 48.4, "25Q3": 59.4, "25Q4": 81.3, "26Q1": 61.8, "26Q2": 55.8 },
+    "Samsung":   { "24Q1": 60.2, "24Q2": 53.8, "24Q3": 57.7, "24Q4": 51.7, "25Q1": 60.6, "25Q2": 58.0, "25Q3": 61.4, "25Q4": 61.2, "26Q1": 62.4, "26Q2": 62.7 },
+    "Xiaomi":    { "24Q1": 40.8, "24Q2": 42.3, "24Q3": 42.8, "24Q4": 42.7, "25Q1": 41.8, "25Q2": 42.4, "25Q3": 43.4, "25Q4": 37.8, "26Q1": 33.8, "26Q2": 31.2 },
+    "Honor":     { "24Q1": 14.0, "24Q2": 13.5, "24Q3": 13.0, "24Q4": 13.5, "25Q1": 16.2, "25Q2": 17.0, "25Q3": 17.5, "25Q4": 17.0, "26Q1": 20.2, "26Q2": 19.5 },
+    "vivo":      { "24Q1": 21.3, "24Q2": 25.9, "24Q3": 27.0, "24Q4": 27.1, "25Q1": 22.7, "25Q2": 26.3, "25Q3": 27.9, "25Q4": 27.0, "26Q1": 21.2, "26Q2": 21.2 },
+    "OPPO":      { "24Q1": 25.2, "24Q2": 28.2, "24Q3": 26.0, "24Q4": 25.0, "25Q1": 34.1, "25Q2": 34.9, "25Q3": 26.5, "25Q4": 26.9, "26Q1": 30.7, "26Q2": 28.8 },
+    "Huawei":    { "24Q1": 14.9, "24Q2": 16.2, "24Q3": 13.8, "24Q4": 15.6, "25Q1": 16.4, "25Q2": 16.3, "25Q3": 14.3, "25Q4": 14.6, "26Q1": 16.5, "26Q2": 19.7 },
+    "Transsion": { "24Q1": 28.5, "24Q2": 25.5, "24Q3": 25.7, "24Q4": 25.4, "25Q1": 25.0, "25Q2": 25.1, "25Q3": 29.2, "25Q4": 25.0, "26Q1": 19.5, "26Q2": 18.5 }
   },
 
   "brandQuarterlyYoyOfficial": {
@@ -62,9 +62,30 @@
     "OPPO":      { "26Q1": -9.9, "26Q2": -17.5 },
     "vivo":      { "25Q2":  4.8, "26Q1": -6.8, "26Q2": -19.4 },
     "Transsion": { "25Q2": -1.7 },
-    "Honor":     { "26Q1": 24.0 },
-    "Huawei":    { "26Q2":  6.0 }
+    "Honor":     { "26Q1": 24.9 },
+    "Huawei":    { "26Q2": 20.9 }
   },
+
+  "brandQuarterlyStatus": {
+    "Apple":     { "25Q1":"IDC_REVISED", "25Q2":"IDC_REVISED", "25Q3":"IDC_FINAL", "25Q4":"IDC_PRELIM", "26Q1":"IDC_FINAL", "26Q2":"IDC_PRELIM" },
+    "Samsung":   { "25Q1":"IDC_REVISED", "25Q2":"IDC_REVISED", "25Q3":"IDC_FINAL", "25Q4":"IDC_PRELIM", "26Q1":"IDC_FINAL", "26Q2":"IDC_PRELIM" },
+    "Xiaomi":    { "25Q1":"IDC_REVISED", "25Q2":"IDC_REVISED", "25Q3":"IDC_FINAL", "25Q4":"IDC_PRELIM", "26Q1":"IDC_FINAL", "26Q2":"IDC_PRELIM" },
+    "Honor":     { "25Q1":"ESTIMATE", "25Q2":"ESTIMATE", "25Q3":"ESTIMATE", "25Q4":"ESTIMATE", "26Q1":"IDC_YOY_DERIVED", "26Q2":"ESTIMATE" },
+    "vivo":      { "25Q1":"IDC_REVISED", "25Q2":"IDC_REVISED", "25Q3":"IDC_FINAL", "25Q4":"IDC_PRELIM", "26Q1":"IDC_FINAL", "26Q2":"IDC_PRELIM" },
+    "OPPO":      { "25Q1":"IDC_REVISED", "25Q2":"IDC_REVISED", "25Q3":"IDC_OLD_SCOPE", "25Q4":"IDC_OLD_SCOPE", "26Q1":"IDC_FINAL", "26Q2":"IDC_PRELIM" },
+    "Huawei":    { "25Q1":"ESTIMATE", "25Q2":"ESTIMATE", "25Q3":"ESTIMATE", "25Q4":"ESTIMATE", "26Q1":"ESTIMATE", "26Q2":"IDC_YOY_DERIVED" },
+    "Transsion": { "25Q1":"ESTIMATE", "25Q2":"IDC_PRELIM", "25Q3":"IDC_FINAL", "25Q4":"ESTIMATE", "26Q1":"ESTIMATE", "26Q2":"ESTIMATE" }
+  },
+
+  "sourceLedger": [
+    { "period":"25Q1", "label":"IDC 25Q1 初值；25Q1 Top5 与总量按 IDC 26Q1 最终历史表重列", "url":"https://www.idc.com/resource-center/press-releases/worldwide-smartphone-market-grew-1-5-in-q1-2025-amid-on-going-us-china-trade-tension-according-to-idc/" },
+    { "period":"25Q2", "label":"IDC 25Q2 初值；25Q2 Top5 与总量按 IDC 26Q2 对比表重列", "url":"https://www.idc.com/resource-center/press-releases/worldwide-smartphone-market-grows-1-0-in-q2-2025-despite-global-uncertainty-and-weak-demand-in-china-according-to-idc/" },
+    { "period":"25Q3", "label":"IDC 25Q3 最终历史数据（2025-11-06）", "url":"https://www.idc.com/promo/smartphone-market-share/" },
+    { "period":"25Q4", "label":"IDC 25Q4 初值（2026-01-13）", "url":"https://www.idc.com/resource-center/press-releases/q425mobilephonetop5/" },
+    { "period":"26Q1", "label":"IDC 26Q1 最终历史数据（2026-05-07）", "url":"https://www.idc.com/promo/smartphone-market-share/" },
+    { "period":"26Q2", "label":"IDC 26Q2 初值（2026-07-13）", "url":"https://www.idc.com/resource-center/press-releases/2q26-mpt-top5/" },
+    { "period":"CROSSCHECK", "label":"Omdia 25Q3 全球市场公开新闻（仅交叉验证，不混入 IDC 官方格）", "url":"https://omdia.tech.informa.com/pr/2025/oct/omdia-global-smartphone-market-grows-3percent-in-q3-2025-led-by-emerging-economies" }
+  ],
 
   "brandChinaQuarterly": {
     "Apple":     { "24Q1": 10.79, "24Q2":  9.72, "24Q3": 10.72, "24Q4": 13.19, "25Q1":  9.81, "25Q2":  9.59, "25Q3": 10.79, "25Q4": 16.02, "26Q1": 12.78, "26Q2": 11.93 },

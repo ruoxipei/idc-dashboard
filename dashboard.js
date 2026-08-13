@@ -1562,7 +1562,7 @@ function renderOverseas() {
     <td style="text-align:center;" class="${overseasYoY==null?'':(overseasYoY>=0?'pos':'neg')}">${fmtYoY(overseasYoY)}</td>
   </tr>`;
   topHtml += `</tbody><tfoot><tr><td colspan="8" style="text-align:left; font-size:11px; color:#64748b; font-weight:400;">
-    <span style="color:#0ea5e9;">*</span> = IDC 官方公布的当期 YoY（其余为按出货量计算）；合计行为全球全量口径。
+    <span style="color:#0ea5e9;">*</span> = IDC 官方公布的全球 YoY；海外出货与海外 YoY 均为“全球 − 中国”倒减计算，不是 IDC 直接披露值。
     ${totOvPrev ? '' : ''}
   </td></tr></tfoot>`;
   $('#overseasTopTbl').innerHTML = topHtml;
@@ -1591,6 +1591,46 @@ function renderOverseas() {
     legend:{orientation:'h', y:-0.18, font:{size:11}},
     margin:{t:20, b:60, l:55, r:30}, bargap:0.3
   }, {responsive:true, displayModeBar:false});
+
+  // ===== ③-b 25Q1–26Q2 分厂商海外出货与 YoY 固定明细 =====
+  const detailQs = ['25Q1','25Q2','25Q3','25Q4','26Q1','26Q2'];
+  const statusMark = (status) => {
+    if (status === 'ESTIMATE') return '<span title="公开信息约束估算" style="color:#d97706;">†</span>';
+    if (status === 'IDC_YOY_DERIVED') return '<span title="按 IDC 官方全球同比反推绝对量" style="color:#7c3aed;">‡</span>';
+    if (status === 'IDC_OLD_SCOPE') return '<span title="IDC 旧 OPPO 口径，未并入 realme" style="color:#dc2626;">§</span>';
+    return '';
+  };
+  let detailHtml = '<thead><tr><th rowspan="2" style="text-align:left;min-width:92px;position:sticky;left:0;background:#f8fafc;z-index:2;">厂商</th>' +
+    detailQs.map(q => `<th colspan="2" style="text-align:center;">${q}</th>`).join('') +
+    '</tr><tr>' + detailQs.map(() => '<th style="text-align:center;min-width:82px;">海外(M)</th><th style="text-align:center;min-width:76px;">YoY</th>').join('') + '</tr></thead><tbody>';
+  brands.forEach(b => {
+    detailHtml += `<tr><td style="text-align:left;position:sticky;left:0;background:#fff;z-index:1;"><span style="display:inline-block;width:10px;height:10px;background:${bColor(b)};border-radius:50%;margin-right:6px;"></span><b>${b}</b></td>`;
+    detailQs.forEach(q => {
+      const prevQ = `${String(+q.slice(0,2)-1).padStart(2,'0')}${q.slice(2)}`;
+      const global = O.brandQuarterly[b]?.[q] || 0;
+      const china = O.brandChinaQuarterly[b]?.[q] || 0;
+      const prevGlobal = O.brandQuarterly[b]?.[prevQ] || 0;
+      const prevChina = O.brandChinaQuarterly[b]?.[prevQ] || 0;
+      const overseas = Math.max(0, global - china);
+      const prevOverseas = Math.max(0, prevGlobal - prevChina);
+      const yoy = prevOverseas ? (overseas / prevOverseas - 1) * 100 : null;
+      const mark = statusMark(O.brandQuarterlyStatus?.[b]?.[q]);
+      detailHtml += `<td style="text-align:center;"><b>${overseas.toFixed(1)}</b>${mark}</td><td style="text-align:center;" class="${yoy==null?'':(yoy>=0?'pos':'neg')}">${yoy==null?'-':fmtYoY(yoy)}</td>`;
+    });
+    detailHtml += '</tr>';
+  });
+  detailHtml += '</tbody><tfoot><tr><td colspan="13" style="text-align:left;font-size:11px;color:#64748b;font-weight:400;line-height:1.7;">' +
+    '海外(M) = 全球厂商出货 − 中国厂商出货；YoY = 当季海外推算值 / 上年同期海外推算值 − 1。' +
+    '<span style="color:#d97706;">†</span> 公开信息约束估算；<span style="color:#7c3aed;">‡</span> IDC 官方全球同比反推；<span style="color:#dc2626;">§</span> OPPO 旧口径（未并入 realme），与 26Q1 起口径存在断点。' +
+    '</td></tr></tfoot>';
+  $('#overseasVendorQuarterlyTbl').innerHTML = detailHtml;
+
+  const sourceLedger = $('#overseasSourceLedger');
+  if (sourceLedger && O.sourceLedger) {
+    sourceLedger.innerHTML = O.sourceLedger.map(s =>
+      `<div><b>${s.period}</b>：<a href="${s.url}" target="_blank" rel="noopener" style="color:#2563eb;">${s.label}</a></div>`
+    ).join('') + '<div style="margin-top:6px;color:#92400e;"><b>口径边界：</b>IDC Tracker 订阅库可直接查询区域/国家/厂商，但公开新闻稿没有完整 8 厂商海外表；因此本页的“海外”统一为倒减推算。</div>';
+  }
 
   // ===== ④ 各区域 TOP 厂商 — 多子图水平柱 =====
   const regionShare = ovShareByPeriod(O.regionBrandShare, period.quarters,

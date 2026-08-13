@@ -456,9 +456,9 @@ tr:hover { background: #f8fafc; }
   <!-- ===== Tab 4: 海外 / 全球 ===== -->
   <div class="tab-pane" id="tab-overseas">
     <div class="note" style="background:#fef3c7; border-left-color:#f59e0b; color:#78350f;">
-      ⚠️ <b>数据说明</b>：本 Tab 采用 <b>IDC 口径</b>（Worldwide Quarterly Mobile Phone Tracker 公开新闻稿），Counterpoint / Omdia 仅用于交叉验证。
-      中国部分为项目内 <b>IDC PRC 月度底稿</b>按季度汇总。海外 = 全球 − 中国。
-      YoY 优先采用 IDC 当期官方公布值（IDC 会回溯修订历史，绝对值相除与官方 YoY 可能有 ±1pp 出入）。
+      ⚠️ <b>数据说明</b>：全球优先采用 <b>IDC Worldwide Quarterly Mobile Phone Tracker 公开季度表</b>，中国采用用户确认准确的国内季度底稿。
+      <b>海外推算值 = 全球出货量 − 中国出货量</b>，不是 IDC 直接公布的“海外”字段；海外 YoY 也由倒减结果计算。
+      IDC 未公开的厂商季度绝对量会明确标成估算/同比反推，公开新闻仅作补充校验。
       仅 <b>季度粒度</b>（IDC 全球数据无月度公开）。<span id="overseasEstNote"></span>
     </div>
 
@@ -525,6 +525,16 @@ tr:hover { background: #f8fafc; }
         <div class="actions"><button onclick="downloadChart('chartOverseasSplit','海外拆分')">📷 PNG</button></div>
       </div>
       <div id="chartOverseasSplit" class="chart" style="height:380px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">25Q1–26Q2 分厂商海外出货规模与 YoY
+        <div class="actions"><button onclick="window.location.href='downloads/IDC海外手机出货_25Q1-26Q2.xlsx'">📊 下载完整 Excel</button></div>
+      </div>
+      <div style="overflow-x:auto;"><table id="overseasVendorQuarterlyTbl"></table></div>
+    </div>
+    <div class="card">
+      <div class="card-title">来源与口径说明</div>
+      <div id="overseasSourceLedger" style="font-size:12px; line-height:1.8; color:#475569;"></div>
     </div>
 
     <!-- ④ 区域格局 -->
