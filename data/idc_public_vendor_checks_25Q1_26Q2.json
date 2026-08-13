@@ -1,0 +1,133 @@
+{
+  "25Q1": {
+    "total": 302.6,
+    "priorTotal": 300.3,
+    "totalYoy": 1.5,
+    "status": "IDC_REVISED",
+    "label": "IDC 26Q1最终历史表中回溯重列的25Q1对比值",
+    "url": "https://www.idc.com/promo/smartphone-market-share/market-share/",
+    "vendors": {
+      "Samsung": 60.6,
+      "Apple": 59.1,
+      "Xiaomi": 41.8,
+      "OPPO": 34.1,
+      "vivo": 22.7
+    },
+    "officialYoy": {}
+  },
+  "25Q2": {
+    "total": 297.4,
+    "priorTotal": 292.2,
+    "totalYoy": 1.0,
+    "status": "IDC_REVISED",
+    "label": "IDC 26Q2公开表中回溯重列的25Q2对比值",
+    "url": "https://www.idc.com/resource-center/press-releases/2q26-mpt-top5/",
+    "vendors": {
+      "Samsung": 58.0,
+      "Apple": 48.4,
+      "Xiaomi": 42.4,
+      "OPPO": 34.9,
+      "vivo": 26.3
+    },
+    "officialYoy": {}
+  },
+  "25Q3": {
+    "total": 325.7,
+    "priorTotal": 314.7,
+    "totalYoy": 3.5,
+    "status": "IDC_FINAL",
+    "label": "IDC 25Q3历史数据，2025-11-06",
+    "url": "https://www.idc.com/promo/smartphone-market-share/?submit=Search",
+    "vendors": {
+      "Samsung": 61.4,
+      "Apple": 59.4,
+      "Xiaomi": 43.4,
+      "Transsion": 29.2,
+      "vivo": 27.9
+    },
+    "officialYoy": {
+      "Samsung": 6.3,
+      "Apple": 4.1,
+      "Xiaomi": 1.4,
+      "Transsion": 13.4,
+      "vivo": 3.4
+    }
+  },
+  "25Q4": {
+    "total": 336.3,
+    "priorTotal": 328.8,
+    "totalYoy": 2.3,
+    "status": "IDC_PRELIM",
+    "label": "IDC 25Q4初值，2026-01-13",
+    "url": "https://www.idc.com/resource-center/press-releases/q425mobilephonetop5/",
+    "vendors": {
+      "Apple": 81.3,
+      "Samsung": 61.2,
+      "Xiaomi": 37.8,
+      "vivo": 27.0,
+      "OPPO": 26.9
+    },
+    "officialYoy": {
+      "Apple": 4.9,
+      "Samsung": 18.3,
+      "Xiaomi": -11.4,
+      "vivo": -0.4,
+      "OPPO": 7.6
+    }
+  },
+  "26Q1": {
+    "total": 293.8,
+    "priorTotal": 302.6,
+    "totalYoy": -2.9,
+    "status": "IDC_FINAL",
+    "label": "IDC 26Q1最终历史数据，2026-05-07",
+    "url": "https://www.idc.com/promo/smartphone-market-share/market-share/",
+    "vendors": {
+      "Samsung": 62.4,
+      "Apple": 61.8,
+      "Xiaomi": 33.8,
+      "OPPO": 30.7,
+      "vivo": 21.2
+    },
+    "officialYoy": {
+      "Samsung": 2.9,
+      "Apple": 4.4,
+      "Xiaomi": -19.1,
+      "OPPO": -9.9,
+      "vivo": -6.9
+    }
+  },
+  "26Q2": {
+    "total": 277.5,
+    "priorTotal": 297.4,
+    "totalYoy": -6.7,
+    "status": "IDC_PRELIM",
+    "label": "IDC 26Q2初值，2026-07-13",
+    "url": "https://www.idc.com/resource-center/press-releases/2q26-mpt-top5/",
+    "vendors": {
+      "Samsung": 62.7,
+      "Apple": 55.8,
+      "Xiaomi": 31.2,
+      "OPPO": 28.8,
+      "vivo": 21.2
+    },
+    "officialYoy": {
+      "Samsung": 8.1,
+      "Apple": 15.3,
+      "Xiaomi": -26.3,
+      "OPPO": -17.5,
+      "vivo": -19.4
+    }
+  },
+  "additionalPublicChecks": [
+    {
+      "period": "25Q2",
+      "brand": "Transsion",
+      "shipment": 25.1,
+      "yoy": -1.7,
+      "status": "IDC_PRELIM",
+      "label": "IDC 25Q2当期初值表",
+      "url": "https://www.idc.com/resource-center/press-releases/worldwide-smartphone-market-grows-1-0-in-q2-2025-despite-global-uncertainty-and-weak-demand-in-china-according-to-idc/"
+    }
+  ]
+}
