@@ -9,9 +9,9 @@ console.log(sheets.ndjson || sheets);
 
 const detail = await workbook.inspect({
   kind: 'table',
-  range: '海外出货明细!A4:S13',
+  range: '海外出货明细!A4:S15',
   include: 'values,formulas',
-  tableMaxRows: 12,
+  tableMaxRows: 14,
   tableMaxCols: 20,
   maxChars: 18000,
 });

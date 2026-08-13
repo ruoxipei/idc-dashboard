@@ -86,6 +86,26 @@ for (const brand of brands) {
   }
 }
 
+for (const period of periods) {
+  const prev = `${String(Number(period.slice(0, 2)) - 1).padStart(2, '0')}${period.slice(2)}`;
+  const source = data.sourceLedger.find((item) => item.period === period);
+  calcIndex.set(`市场总计|${period}`, calcRows.length + 2);
+  calcRows.push([
+    period,
+    '市场总计',
+    data.globalQuarterly[period].total,
+    data.globalQuarterly[period].china,
+    null,
+    data.globalQuarterly[prev].total,
+    data.globalQuarterly[prev].china,
+    null,
+    null,
+    'IDC_GLOBAL_TOTAL / CHINA_CONFIRMED',
+    `${source?.label || ''}；中国总量为用户确认准确底稿`,
+    source?.url || '',
+  ]);
+}
+
 brands.forEach((brand, brandIndex) => {
   const row = 6 + brandIndex;
   detail.getRange(`A${row}`).values = [[brand]];
@@ -126,14 +146,67 @@ brands.forEach((brand, brandIndex) => {
   }
 });
 
-detail.getRange('A15:S15').merge();
-detail.getRange('A15').values = [['半年汇总：25H1 = 25Q1+25Q2；25H2 = 25Q3+25Q4；26H1 = 26Q1+26Q2。颜色：橙色 = 估算；紫色 = IDC 同比反推；红色 = OPPO 旧口径。']];
-detail.getRange('A15:S15').format = { fill: '#F8FAFC', font: { color: '#64748B', italic: true }, wrapText: true };
-detail.getRange('A15:S15').format.rowHeight = 30;
-detail.getRange('A1:S15').format.font = { name: 'Arial' };
-detail.getRange('A1:A15').format.columnWidth = 15;
-detail.getRange('B1:S15').format.columnWidth = 13;
-detail.getRange('A4:S13').format.rowHeight = 24;
+const vendorTotalRow = 14;
+const marketTotalRow = 15;
+detail.getRange(`A${vendorTotalRow}`).values = [['8厂商合计']];
+detail.getRange(`A${marketTotalRow}`).values = [['海外市场总计']];
+detail.getRange(`A${vendorTotalRow}:S${vendorTotalRow}`).format = { fill: '#ECFDF5', font: { bold: true, color: '#065F46' }, borders: bodyBorder };
+detail.getRange(`A${marketTotalRow}:S${marketTotalRow}`).format = { fill: '#E0E7FF', font: { bold: true, color: '#1E3A8A' }, borders: bodyBorder };
+
+const vendorBaseFormula = (sourcePeriods) => sourcePeriods.flatMap((period) =>
+  brands.map((brand) => `'计算底稿'!H${calcIndex.get(`${brand}|${period}`)}`)
+).join(',');
+const marketBaseFormula = (sourcePeriods) => sourcePeriods.map((period) =>
+  `'计算底稿'!H${calcIndex.get(`市场总计|${period}`)}`
+).join(',');
+
+periods.forEach((period, periodIndex) => {
+  const startCol = 2 + periodIndex * 2;
+  const shipmentCol = letters[startCol - 1];
+  const yoyCol = letters[startCol];
+  const calcMarketRow = calcIndex.get(`市场总计|${period}`);
+  const vendorBase = vendorBaseFormula([period]);
+  detail.getRange(`${shipmentCol}${vendorTotalRow}`).formulas = [[`=SUM(${shipmentCol}6:${shipmentCol}13)`]];
+  detail.getRange(`${yoyCol}${vendorTotalRow}`).formulas = [[`=IF(SUM(${vendorBase})=0,"",${shipmentCol}${vendorTotalRow}/SUM(${vendorBase})-1)`]];
+  detail.getRange(`${shipmentCol}${marketTotalRow}`).formulas = [[`='计算底稿'!E${calcMarketRow}`]];
+  detail.getRange(`${yoyCol}${marketTotalRow}`).formulas = [[`='计算底稿'!I${calcMarketRow}`]];
+});
+
+const totalSummaryDefs = [
+  { dest: ['N', 'O'], currentCols: ['B', 'D'], sourcePeriods: ['25Q1', '25Q2'] },
+  { dest: ['P', 'Q'], currentCols: ['F', 'H'], sourcePeriods: ['25Q3', '25Q4'] },
+  { dest: ['R', 'S'], currentCols: ['J', 'L'], sourcePeriods: ['26Q1', '26Q2'], previousCols: ['N'] },
+];
+for (const summary of totalSummaryDefs) {
+  const [shipmentCol, yoyCol] = summary.dest;
+  for (const row of [vendorTotalRow, marketTotalRow]) {
+    detail.getRange(`${shipmentCol}${row}`).formulas = [[`=SUM(${summary.currentCols[0]}${row},${summary.currentCols[1]}${row})`]];
+  }
+  if (summary.previousCols) {
+    detail.getRange(`${yoyCol}${vendorTotalRow}`).formulas = [[`=IF(${summary.previousCols[0]}${vendorTotalRow}=0,"",${shipmentCol}${vendorTotalRow}/${summary.previousCols[0]}${vendorTotalRow}-1)`]];
+    detail.getRange(`${yoyCol}${marketTotalRow}`).formulas = [[`=IF(${summary.previousCols[0]}${marketTotalRow}=0,"",${shipmentCol}${marketTotalRow}/${summary.previousCols[0]}${marketTotalRow}-1)`]];
+  } else {
+    const vendorBase = vendorBaseFormula(summary.sourcePeriods);
+    const marketBase = marketBaseFormula(summary.sourcePeriods);
+    detail.getRange(`${yoyCol}${vendorTotalRow}`).formulas = [[`=IF(SUM(${vendorBase})=0,"",${shipmentCol}${vendorTotalRow}/SUM(${vendorBase})-1)`]];
+    detail.getRange(`${yoyCol}${marketTotalRow}`).formulas = [[`=IF(SUM(${marketBase})=0,"",${shipmentCol}${marketTotalRow}/SUM(${marketBase})-1)`]];
+  }
+}
+
+for (const row of [vendorTotalRow, marketTotalRow]) {
+  for (const shipmentCol of ['B','D','F','H','J','L','N','P','R']) detail.getRange(`${shipmentCol}${row}`).format.numberFormat = '0.0';
+  for (const yoyCol of ['C','E','G','I','K','M','O','Q','S']) detail.getRange(`${yoyCol}${row}`).format.numberFormat = '+0.0%;-0.0%;0.0%';
+  detail.getRange(`B${row}:S${row}`).format.horizontalAlignment = 'center';
+}
+
+detail.getRange('A17:S17').merge();
+detail.getRange('A17').values = [['总计说明：8厂商合计仅汇总表内厂商；海外市场总计 = 全球全量 − 中国全量，包含其他厂商。半年：25H1 = 25Q1+25Q2；25H2 = 25Q3+25Q4；26H1 = 26Q1+26Q2。']];
+detail.getRange('A17:S17').format = { fill: '#F8FAFC', font: { color: '#64748B', italic: true }, wrapText: true };
+detail.getRange('A17:S17').format.rowHeight = 30;
+detail.getRange('A1:S17').format.font = { name: 'Arial' };
+detail.getRange('A1:A17').format.columnWidth = 15;
+detail.getRange('B1:S17').format.columnWidth = 13;
+detail.getRange('A4:S15').format.rowHeight = 24;
 detail.freezePanes.freezeRows(5);
 detail.freezePanes.freezeColumns(1);
 
@@ -142,20 +215,21 @@ calc.getRange('A1:L1').values = [[
   '季度','厂商','全球出货(M)','中国出货(M)','海外出货(M)','上年同期全球(M)','上年同期中国(M)','上年同期海外(M)','海外YoY','来源状态','公开来源说明','公开来源URL',
 ]];
 calc.getRange('A1:L1').format = { fill: '#0F766E', font: { bold: true, color: '#FFFFFF' }, horizontalAlignment: 'center', borders: bodyBorder };
-calc.getRange(`A2:L${calcRows.length + 1}`).values = calcRows;
-calc.getRange(`E2:E${calcRows.length + 1}`).formulas = calcRows.map((_, index) => [[`=C${index + 2}-D${index + 2}`]]).flat();
-calc.getRange(`H2:H${calcRows.length + 1}`).formulas = calcRows.map((_, index) => [[`=F${index + 2}-G${index + 2}`]]).flat();
-calc.getRange(`I2:I${calcRows.length + 1}`).formulas = calcRows.map((_, index) => [[`=IF(H${index + 2}=0,"",E${index + 2}/H${index + 2}-1)`]]).flat();
-calc.getRange(`A2:L${calcRows.length + 1}`).format = { borders: bodyBorder, verticalAlignment: 'center' };
-calc.getRange(`C2:H${calcRows.length + 1}`).format.numberFormat = '0.00';
-calc.getRange(`I2:I${calcRows.length + 1}`).format.numberFormat = '+0.0%;-0.0%;0.0%';
-calc.getRange(`A1:L${calcRows.length + 1}`).format.font = { name: 'Arial' };
-calc.getRange('A1:B49').format.columnWidth = 13;
-calc.getRange('C1:I49').format.columnWidth = 16;
-calc.getRange('J1:J49').format.columnWidth = 20;
-calc.getRange('K1:K49').format.columnWidth = 46;
-calc.getRange('L1:L49').format.columnWidth = 52;
-calc.getRange('K2:L49').format.wrapText = true;
+const calcEndRow = calcRows.length + 1;
+calc.getRange(`A2:L${calcEndRow}`).values = calcRows;
+calc.getRange(`E2:E${calcEndRow}`).formulas = calcRows.map((_, index) => [[`=C${index + 2}-D${index + 2}`]]).flat();
+calc.getRange(`H2:H${calcEndRow}`).formulas = calcRows.map((_, index) => [[`=F${index + 2}-G${index + 2}`]]).flat();
+calc.getRange(`I2:I${calcEndRow}`).formulas = calcRows.map((_, index) => [[`=IF(H${index + 2}=0,"",E${index + 2}/H${index + 2}-1)`]]).flat();
+calc.getRange(`A2:L${calcEndRow}`).format = { borders: bodyBorder, verticalAlignment: 'center' };
+calc.getRange(`C2:H${calcEndRow}`).format.numberFormat = '0.00';
+calc.getRange(`I2:I${calcEndRow}`).format.numberFormat = '+0.0%;-0.0%;0.0%';
+calc.getRange(`A1:L${calcEndRow}`).format.font = { name: 'Arial' };
+calc.getRange(`A1:B${calcEndRow}`).format.columnWidth = 13;
+calc.getRange(`C1:I${calcEndRow}`).format.columnWidth = 16;
+calc.getRange(`J1:J${calcEndRow}`).format.columnWidth = 20;
+calc.getRange(`K1:K${calcEndRow}`).format.columnWidth = 46;
+calc.getRange(`L1:L${calcEndRow}`).format.columnWidth = 52;
+calc.getRange(`K2:L${calcEndRow}`).format.wrapText = true;
 calc.freezePanes.freezeRows(1);
 
 sources.showGridLines = false;
@@ -193,10 +267,10 @@ sources.freezePanes.freezeRows(1);
 
 const overview = await workbook.inspect({ kind: 'sheet', include: 'id,name', maxChars: 3000 });
 console.log(overview.ndjson || overview);
-const formulaInspect = await workbook.inspect({ kind: 'formula', sheetId: '计算底稿', range: 'E1:I49', maxChars: 5000, options: { maxResults: 160 } });
+const formulaInspect = await workbook.inspect({ kind: 'formula', sheetId: '计算底稿', range: `E1:I${calcEndRow}`, maxChars: 5000, options: { maxResults: 180 } });
 console.log(formulaInspect.ndjson || formulaInspect);
 
-const previewRanges = { '海外出货明细': 'A1:S15', '计算底稿': 'A1:L49', '来源说明': 'A1:C22' };
+const previewRanges = { '海外出货明细': 'A1:S17', '计算底稿': `A1:L${calcEndRow}`, '来源说明': 'A1:C22' };
 for (const sheetName of ['海外出货明细', '计算底稿', '来源说明']) {
   const preview = await workbook.render({ sheetName, range: previewRanges[sheetName], scale: 1, format: 'png' });
   await fs.writeFile(path.join(outputDir, `${sheetName}.png`), new Uint8Array(await preview.arrayBuffer()));
